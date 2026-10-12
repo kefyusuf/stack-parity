@@ -10,6 +10,12 @@ The branch was prepared without access to a compatible local Node/Bun/pnpm packa
 
 Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
 
+## Optional Docker development path
+
+For users without host Node.js/Bun/pnpm, use the [Docker guide](SPIKE-001-docker.md).
+This provides a containerized install, typecheck, unit test, build and standalone HTTP smoke test.
+It does **not** replace the Composer-specific local or cloud deployment gates.
+
 ## Local preparation
 
 Prerequisites:
@@ -83,7 +89,7 @@ Use the public URL actually returned by the deployment. Do not invent it. No sec
 | AC-01 clean install + committed lockfile | NOT RUN | Requires registry access |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | NOT RUN | Requires toolchain |
-| AC-04 local /health | NOT RUN | Requires Bun/Composer dev |
+| AC-04 local /health | NOT RUN | Docker standalone check is additional evidence only; Composer dev still required |
 | AC-05 Composer declaration | PREPARED | Requires installed-version validation |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
