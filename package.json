@@ -19,6 +19,8 @@
     "@prisma/composer-prisma-cloud": "0.25.0"
   },
   "devDependencies": {
+    "@effect/platform-bun": "4.0.0-rc.115",
+    "@effect/platform-node": "4.0.0-rc.115",
     "@types/bun": "1.4.2",
     "prisma": "8.0.0-rc.22",
     "turbo": "2.11.2",
