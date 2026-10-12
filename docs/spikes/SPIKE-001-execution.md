@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — fresh local Composer converge advertises publicApi; HTTP, lockfile and cloud deployment gates pending**
+**Status: IN PROGRESS — Composer-managed local HTTP 200 verified; current lockfile and remote Prisma Compute deployment pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -435,15 +435,31 @@ Require `HTTP 200`, `{"status":"ok","contractVersion":"spike-001"}`, and exit co
 
 **Outstanding independent blockers:** The GitHub-committed `pnpm-lock.yaml` still lists Composer `0.25.0`; the package manifests now require `0.29.1`. The pnpm-generated lockfile needs review and commit, followed by frozen-lockfile test. Real remote Prisma Compute deployment and public HTTP 200 are pending. Do not merge PR #3, close Issue #1, or add new product scope yet.
 
+## Composer-managed HTTP gate PASSED (user execution, 2026-10-12)
+
+After `pnpm exec prisma dev module.ts --fresh` printed `Stack deployed (4/4)`, `dev: ready` and `publicApi: http://localhost:3000`, the user executed the request **inside the named Compose one-off container** `stack-parity-composer-check`, not against the independent host-exposed standalone Hono process.
+
+Exact user-reported result:
+
+```text
+HTTP 200
+{"status":"ok","contractVersion":"spike-001"}
+0
+```
+
+**This passes the local Composer-managed HTTP contract assertion.** The returned `contractVersion` is defined in the shared `@stack-parity/contracts` workspace package. This does **not** imply Prisma Cloud deployment or external public reachability.
+
+GitHub state checked after this gate: `package.json` pins Composer `0.29.1`, but the committed `pnpm-lock.yaml` importers still pin Composer `0.25.0`. The user has a locally regenerated lockfile from successful pnpm installation. Verify `pnpm install --frozen-lockfile` **in the user's local checkout**, inspect that only the intended lockfile was staged, then commit/push it. Re-run typecheck/test/build against the frozen set to close reproducibility evidence. Hold remote deployment until the lockfile is consistent and those tests pass.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | USER-REPORTED PASS / RAW LOG PENDING | Lockfile committed at 2395318; user indicates frozen install was successful; exact exit code not captured |
-| AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
+| AC-01 clean install + committed lockfile | BLOCKED / UPDATE REQUIRED | Committed pnpm-lock still pins Composer 0.25.0 while package manifest pins 0.29.1; local regenerated lockfile and frozen install verification required |
+| AC-02 workspace package import | USER-EXECUTED RUNTIME PASS | Composer-managed HTTP response contains shared workspace contractVersion spike-001; import is explicit in Hono source |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
-| AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
-| AC-05 Composer declaration | LOCAL FRESH CONVERGE PASS / HTTP PENDING | `prisma dev module.ts --fresh` created four resources, printed `Stack deployed (4/4)`, `dev: ready`, and `publicApi: http://localhost:3000`; HTTP still needs direct test |
+| AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
+| AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
