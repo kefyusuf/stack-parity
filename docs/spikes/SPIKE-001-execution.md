@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — Composer local dev reached 'dev: ready'; Composer-served HTTP, committed lockfile, and remote deploy pending**
+**Status: BLOCKED ON COMPOSER-MANAGED HTTP — local converge ready but internal /health fetch failed; process and listener diagnosis pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -361,7 +361,7 @@ No Alchemy export error, Effect version error or Composer graph error occurred. 
 
 **Precisely verified:** Composer/Alchemy local converge reached `dev: ready`. **Still not verified:** Composer-managed `publicApi` HTTP request and status, or any **remote** Prisma Compute deployment.
 
-The existing standalone Hono container already binds Windows `localhost:3000`. To avoid testing that process by mistake, probe from **inside the named Composer container** with the local default service port `3000` (the Composer docs state this as the default). With the original `docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` process still running, use a **second PowerShell terminal**:
+The existing standalone Hono container already binds Windows `localhost:3000`. To avoid testing that process by mistake, inspect the Composer container's actual service listener and test from inside the named container. The prior guess of port `3000` was not confirmed for this process. With the original `docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` process still running, use a **second PowerShell terminal**:
 
 ```powershell
 docker exec stack-parity-composer-check node -e "fetch('http://127.0.0.1:3000/health').then(async r => { console.log('HTTP', r.status); console.log(await r.text()); process.exit(r.status === 200 ? 0 : 1) }).catch(e => { console.error(e.message); process.exit(1) })"
@@ -372,6 +372,14 @@ Expected `HTTP 200` and `{"status":"ok","contractVersion":"spike-001"}`. If the 
 
 The `pnpm-lock.yaml` committed in GitHub still records Composer `0.25.0`, so it is outdated after the patch. The user's locally regenerated lockfile needs review/commit, followed by frozen-lockfile validation; do not attempt a remote deploy before closing the local gate.
 
+## Composer local HTTP probe failure (user log, 2026-10-12)
+
+The user reports `docker exec stack-parity-composer-check node -e "fetch('http://127.0.0.1:3000/health')..."` yielded `fetch failed` with exit code `1`. This is an **unverified Composer-managed HTTP gate**, despite `Stack deployed` and `dev: ready`. The standalone Hono Docker HTTP test is separate.
+
+**Port correction:** `service.port()` defaults to 3000 in the Composer quickstart, but local-dev docs say `prisma dev` prints each service's actual local URL. The user's readiness output omitted any `publicApi` URL. `Plan · 4 no change` is a warm-state converge, and does not by itself prove the service is listening. The documentation discusses a possible stale-emulator situation with readiness but missing endpoints, yet this has **not** been proven in this instance.
+
+**Read-only next diagnostics:** `docker ps --filter "name=stack-parity-composer-check"`, `docker top stack-parity-composer-check`, and inspect TCP LISTEN entries from `/proc/net/tcp` and `/proc/net/tcp6` inside that same container. Check for a Bun server process and the actual exposed port before any targeted retry or state recovery. Do not run `--fresh`, clear volumes or change Docker port mappings without evidence. Do not claim a public or local HTTP PASS.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -380,7 +388,7 @@ The `pnpm-lock.yaml` committed in GitHub still records Composer `0.25.0`, so it 
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
-| AC-05 Composer declaration | USER-REPORTED LOCAL STARTUP PASS | After Composer 0.29.1 alignment, log shows Plan ready, 4 no change, Stack deployed, dev: ready; HTTP and fresh cloud deploy remain separate |
+| AC-05 Composer declaration | LOCAL CONVERGE PASS / HTTP BLOCKED | After 0.29.1 alignment, Plan ready and dev: ready; internal 127.0.0.1:3000/health fetch failed; missing service URL and listener require investigation |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
