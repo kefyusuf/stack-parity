@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — Docker smoke and frozen install user-reported successful; Composer local/remote pending**
+**Status: IN PROGRESS — Composer graph validation failed; alphanumeric service ID correction awaits retest**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -164,6 +164,23 @@ curl.exe -i http://localhost:3000/health
 
 Classify these as **user-reported successful**. The raw frozen-install exit code, HTTP status line, and JSON body are not attached in the conversation. The assistant has not performed an independent Docker execution, so those exact fields remain evidence to capture before final closure. The committed lockfile already exists; do not regenerate or upgrade it merely for this gate.
 
+## Composer graph validation failure (2026-10-12)
+
+The first user-run `docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` stopped with **exit code 2**:
+
+```text
+[COMPOSE.GRAPH_INVALID] provision() id "public-api" (module "stack-parity")
+must contain only ASCII letters and digits ([A-Za-z0-9])
+```
+
+**Root cause:** `compute({ name: "public-api" })` in `services/public-api/src/service.ts` becomes the default graph `provision()` ID. The hyphen is not accepted in that address segment. This is **not** a Docker or Hono failure.
+
+**Minimal fix:** changed only the Composer service node `name` to `"publicApi"`. The directory `services/public-api`, npm workspace package `@stack-parity/public-api`, public `/health` endpoint, and root module name `"stack-parity"` remain unchanged. Prisma documentation confirms the provision ID defaults to the node's name; module display names may include hyphens.
+
+**Separate advisory:** The CLI also printed `Prisma agent skills are out of date ... Run: prisma skills sync`. This did not cause `COMPOSE.GRAPH_INVALID`; a skill sync is not a graph validation or runtime fix. Avoid changing agent skill configuration as part of this one-line correction.
+
+**Retest:** fetch the new commit, rerun `pnpm build` inside Docker (the build artifact contains the Composer service declaration), then run `pnpm compute:dev` again. Preserve the next CLI output rather than assuming the first error was the only blocker. No successful Composer boot or Compute deployment has been observed.
+
 ## Next gate: Composer-managed local execution (no cloud credentials)
 
 Prisma's current Composer documentation requires a build before `prisma dev module.ts`. The existing script `pnpm compute:dev` invokes that command. Unlike the standalone Hono container, this runs the Composer declaration/runtime pipeline.
@@ -198,7 +215,7 @@ This validation is intentionally separate from Docker standalone `/health`. It i
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
-| AC-05 Composer declaration | PREPARED | Requires installed-version validation |
+| AC-05 Composer declaration | FAILED / FIX PREPARED | Actual CLI rejected hyphenated provision ID; service renamed publicApi; retest pending |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
