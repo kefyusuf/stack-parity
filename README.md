@@ -28,6 +28,14 @@ Later milestones may add Astro (content), Next.js (storefront), Nuxt (merchant U
 
 Read the [B0 Bootstrap Brief](docs/bootstrap-brief-v0.1.md), [SPIKE-001 acceptance gate](docs/spikes/SPIKE-001.md), [ADR-0001](docs/adr/0001-project-thesis-and-boundaries.md), and [Issue #1](https://github.com/kefyusuf/stack-parity/issues/1).
 
+## Local SPIKE-001 development (draft)
+
+You can either install Node.js, Bun and pnpm natively or use Docker Desktop / Docker Engine with Compose v2.
+
+For the Docker path, see [SPIKE-001 Docker development](docs/spikes/SPIKE-001-docker.md). It provides local install, typechecking, tests, build and a standalone Hono HTTP smoke check without host language runtimes.
+
+**Note:** This does not prove Prisma Composer execution or a live Prisma Compute deployment. The complete evidence and stop conditions are recorded in [SPIKE-001 execution](docs/spikes/SPIKE-001-execution.md).
+
 ## License
 
 [MIT](LICENSE).
