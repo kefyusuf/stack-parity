@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — Composer-managed local HTTP 200 verified; current lockfile and remote Prisma Compute deployment pending**
+**Status: LOCAL ACCEPTANCE GATES PASS (user-run Docker); remote Prisma Compute deployment and public HTTP 200 remain pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -457,13 +457,30 @@ After the Composer-managed `/health` request succeeded, the user executed the pr
 
 This is a **local workspace PASS only**. At the time of verification the `pnpm-lock.yaml` committed on GitHub still pins Composer `0.25.0`; the manifest pins Composer `0.29.1`. The regenerated lockfile must be staged, reviewed, committed and pushed to make frozen installs reproducible from GitHub. Next gate: rerun `pnpm typecheck`, `pnpm test`, `pnpm build` against the frozen installation, then commit/push **only** the regenerated lockfile once all commands pass. Do not restore the earlier workspace-config stash or modify dependencies.
 
+## Local acceptance gate closed — committed lockfile and quality checks (2026-10-12)
+
+The user supplied Windows PowerShell output after the Composer-managed HTTP 200:
+
+- `docker compose run --rm dev pnpm install --frozen-lockfile` — `Already up to date`, exit `0`.
+- `docker compose run --rm dev pnpm typecheck` — TypeScript `tsc -p tsconfig.json --noEmit`, exit `0`.
+- `docker compose run --rm dev pnpm test` — Bun v1.4.3, `1 pass / 0 fail`, exit `0`.
+- `docker compose run --rm dev pnpm build` — Turborepo 2.11.2, `1 successful / 1 total`, `1 cached`, exit `0`. The build gate passed by replaying a cached successful artifact; this does **not** establish an uncached build on the final lockfile.
+- `git diff --check -- pnpm-lock.yaml` produced no whitespace errors; `git status --short` showed only `M pnpm-lock.yaml`. The Windows LF→CRLF warning did not constitute a validation failure.
+- GitHub PR #3 head `041b120ace603be1c1ad3336508546e12788f42b` now contains the user's `chore(spike-001): lock verified Composer 0.29.1 dependencies` commit, changing **only `pnpm-lock.yaml`**. The committed lockfile importer now pins `@prisma/composer@0.29.1` and `@prisma/composer-prisma-cloud@0.29.1`, matching `package.json`.
+
+**Scope of the PASS:** consistent committed dependency graph, typecheck, unit test, cached successful build, Composer local converge and Composer-managed `GET /health` HTTP 200 / `contractVersion: spike-001` — as evidenced by the user's executed commands. One optional tightening is an uncached build, but no reason to introduce new infrastructure/CI for it.
+
+**Next gate:** official `prisma/composer` v0.29.1 deployment documentation confirms `prisma deploy module.ts` targets **production** by default, whereas `prisma deploy module.ts --stage spike-001` targets an isolated stage. The current Composer configuration fixes the Compute region to `eu-central-1`. Remote execution requires the user's explicitly authorized Prisma Cloud workspace/credentials (interactive `prisma auth login` or the documented service token). The existing `docker compose run --rm` creates ephemeral containers; do not assume an interactive session saved there persists to a subsequent one-off container. Avoid publishing token values or accidentally deploying to production.
+
+**No remote deploy was executed in this session.** Until a public deployment URL returns HTTP 200 and matching JSON, retain PR Draft / Issue #1 open and do not advance beyond B0 SPIKE-001.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | LOCAL FROZEN INSTALL PASS / COMMIT PENDING | User reports Docker pnpm install --frozen-lockfile exit code 0; remote GitHub lockfile still pins Composer 0.25.0, must commit local regenerated 0.29.1 lockfile |
+| AC-01 clean install + committed lockfile | PASS (user-run + GitHub verified) | Frozen install exit 0; head 041b120 committed pnpm-lock.yaml importer Composer 0.29.1 and Cloud extension 0.29.1, matching manifest |
 | AC-02 workspace package import | USER-EXECUTED RUNTIME PASS | Composer-managed HTTP response contains shared workspace contractVersion spike-001; import is explicit in Hono source |
-| AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
+| AC-03 typecheck + build | PASS (user-run, build cached) | Typecheck exit 0; Bun test 1 pass/0 fail exit 0; Turbo build 1 successful with 1 cache hit exit 0 |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
