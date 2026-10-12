@@ -102,11 +102,25 @@ Observed from Windows Docker Desktop logs (paths and transient container IDs omi
 
 No `deprecated` dependency has been upgraded solely to hide warning output. These changes address local dev setup only; Prisma Composer and remote deployment checks remain independent gates.
 
+## User-provided pnpm 11 install output (2026-10-12, second attempt)
+
+The subsequent Docker install **downloaded and linked all 442 packages** and ended with `added 442, done`. However, the installer then emitted:
+
+```text
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.2, workerd@1.20260901.1
+```
+
+This is a **real install failure under pnpm 11**, even though package installation progress reached `done`. It is not caused by deprecated package warnings. The transient `UND_ERR_SOCKET` error recovered and the pnpm store moved to `/workspace/node_modules/.pnpm-store/v11` as intended.
+
+**Narrow corrective change:** `pnpm-workspace.yaml` now specifies `strictDepBuilds: true` and `allowBuilds: { esbuild: true, workerd: true }`. This follows pnpm 11 security policy; it does not relax checks for future dependencies. Execute `pnpm install` again, then `pnpm rebuild esbuild workerd` to run previously blocked lifecycle scripts. **No successful retest is yet recorded.**
+
+The install log also mentions unresolved peer dependencies. Run `pnpm peers check` after a successful install and record details without speculative upgrades.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | BLOCKED | User installation interrupted; retest with Docker volume fix |
+| AC-01 clean install + committed lockfile | BLOCKED | Second install linked all packages but pnpm 11 rejected esbuild/workerd build scripts; explicit allowBuilds patch requires retest |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | NOT RUN | Requires toolchain |
 | AC-04 local /health | NOT RUN | Old Compose default did not start a server; retest standalone and separately Composer dev |
