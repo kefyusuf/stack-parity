@@ -1,12 +1,12 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — local Docker port accessible; lockfile and remote deployment pending**
+**Status: IN PROGRESS — lockfile committed; frozen install, exact HTTP response and Prisma Compute pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
 ## Environment
 
-The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. The user also reported exit code `0` for typecheck, unit tests, and build. The user reports that port 3000 responds without a problem on 2026-10-12; the full HTTP status and JSON body were not captured in chat. Composer and cloud deployment remain unverified.
+The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A `pnpm-lock.yaml` file was committed to this branch on 2026-10-12 (`2395318b27e80a3287da73a32fe26791c2e93f5c`). Its workspace importers and pinned versions have been inspected structurally, but a frozen-lockfile reinstall has **not** been reported. The user also reported exit code `0` for typecheck, unit tests, and build. The user reports that port 3000 responds without a problem on 2026-10-12; the full HTTP status and JSON body were not captured in chat. Composer and cloud deployment remain unverified.
 
 Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
 
@@ -125,7 +125,7 @@ docker compose run --rm dev pnpm install --reporter=append-only
 docker compose run --rm dev pnpm rebuild esbuild workerd
 ```
 
-This validates the immediate installer/rebuild blocker **as user-reported execution evidence**. It does not establish a clean frozen-lockfile install, correct runtime behavior, or any Prisma Compute deployment. The lockfile is still absent from the GitHub branch and must be committed after verification. The user subsequently reported exit code `0` for `pnpm typecheck`, `pnpm test`, and `pnpm build` inside the Docker toolchain. The next gate is the standalone Docker HTTP check. Full command output is not attached, so the result is marked user-reported.
+This validates the immediate installer/rebuild blocker **as user-reported execution evidence**. It does not establish a clean frozen-lockfile install, correct runtime behavior, or any Prisma Compute deployment. The lockfile is now committed to the GitHub branch; verify a frozen-lockfile install before merging. The user subsequently reported exit code `0` for `pnpm typecheck`, `pnpm test`, and `pnpm build` inside the Docker toolchain. The next gate is the standalone Docker HTTP check. Full command output is not attached, so the result is marked user-reported.
 
 ## User-reported validation (2026-10-12)
 
@@ -143,13 +143,21 @@ This is **user-reported exit-code evidence**, not an independently captured test
 
 The user reports port `3000` is reachable and working following `docker compose up -d dev`. This confirms a useful local smoke result, but **the exact** `curl.exe -i http://localhost:3000/health` **status line and body have not been captured**. Do not mark the contract-specific HTTP assertion PASS without confirming `HTTP 200` and `contractVersion: "spike-001"`.
 
-The next non-code task is committing the generated `pnpm-lock.yaml` and validating `pnpm install --frozen-lockfile`. No scope expansion is authorized.
+The generated `pnpm-lock.yaml` was subsequently committed. The next non-code task is validating `pnpm install --frozen-lockfile` and collecting the exact HTTP status and response JSON. No scope expansion is authorized.
+
+## GitHub verification (2026-10-12)
+
+- `pnpm-lock.yaml` is committed on `spike/compute-monorepo-foundation`, commit `2395318b27e80a3287da73a32fe26791c2e93f5c`.
+- Static inspection confirms lockfile v9, root importer, contracts workspace importer, public-api importer, workspace link to `@stack-parity/contracts`, and the expected pinned dependency versions.
+- No need to regenerate or upgrade the lockfile merely because pnpm prints an update notice.
+- **Remaining acceptance proof**: `docker compose run --rm dev pnpm install --frozen-lockfile` exits 0, plus `curl.exe -i http://localhost:3000/health` visibly returns HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}`.
+- Neither check has been independently run by the assistant (Docker is unavailable in this execution environment). Composer `dev` and remote deployment remain separate pending gates.
 
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | PARTIAL | User reports install+rebuild exit code 0 after allowBuilds; committed lockfile and frozen reinstallation pending |
+| AC-01 clean install + committed lockfile | PARTIAL | Lockfile committed at 2395318; install+rebuild exit 0 user-reported; frozen-lockfile reinstallation not yet reported |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-REPORTED REACHABLE | Port 3000 works; exact HTTP 200 JSON and Composer dev remain unverified |
