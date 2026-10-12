@@ -1,12 +1,12 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — dependency install/rebuild reported successful; typecheck/test/build and deployment pending**
+**Status: IN PROGRESS — install/rebuild/typecheck/unit tests/build reported successful; local HTTP and deployment pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
 ## Environment
 
-The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. No successful typecheck, build, unit test, local Composer run, or cloud deployment has been established.
+The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. The user also reported exit code `0` for typecheck, unit tests, and build. No successful local HTTP check, Composer run, or cloud deployment has been established.
 
 Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
 
@@ -125,7 +125,19 @@ docker compose run --rm dev pnpm install --reporter=append-only
 docker compose run --rm dev pnpm rebuild esbuild workerd
 ```
 
-This validates the immediate installer/rebuild blocker **as user-reported execution evidence**. It does not establish a clean frozen-lockfile install, correct runtime behavior, or any Prisma Compute deployment. The lockfile is still absent from the GitHub branch and must be committed after verification. Next gate: `pnpm typecheck`, `pnpm test`, and `pnpm build` inside the same Docker toolchain.
+This validates the immediate installer/rebuild blocker **as user-reported execution evidence**. It does not establish a clean frozen-lockfile install, correct runtime behavior, or any Prisma Compute deployment. The lockfile is still absent from the GitHub branch and must be committed after verification. The user subsequently reported exit code `0` for `pnpm typecheck`, `pnpm test`, and `pnpm build` inside the Docker toolchain. The next gate is the standalone Docker HTTP check. Full command output is not attached, so the result is marked user-reported.
+
+## User-reported validation (2026-10-12)
+
+The user confirms exit code `0` for each of:
+
+```powershell
+docker compose run --rm dev pnpm typecheck
+docker compose run --rm dev pnpm test
+docker compose run --rm dev pnpm build
+```
+
+This is **user-reported exit-code evidence**, not an independently captured test log. It supports moving to a standalone Docker HTTP smoke check without marking the entire SPIKE-001 PASS.
 
 ## Acceptance evidence
 
@@ -133,8 +145,8 @@ This validates the immediate installer/rebuild blocker **as user-reported execut
 |---|---|---|
 | AC-01 clean install + committed lockfile | PARTIAL | User reports install+rebuild exit code 0 after allowBuilds; committed lockfile and frozen reinstallation pending |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
-| AC-03 typecheck + build | NOT RUN | Requires toolchain |
-| AC-04 local /health | NOT RUN | Old Compose default did not start a server; retest standalone and separately Composer dev |
+| AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
+| AC-04 local /health | NOT RUN | Next: persistent Hono container and HTTP 200; Composer dev still separate |
 | AC-05 Composer declaration | PREPARED | Requires installed-version validation |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
