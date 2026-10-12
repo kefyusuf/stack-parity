@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — lockfile committed; frozen install, exact HTTP response and Prisma Compute pending**
+**Status: IN PROGRESS — Docker smoke and frozen install user-reported successful; Composer local/remote pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -153,14 +153,51 @@ The generated `pnpm-lock.yaml` was subsequently committed. The next non-code tas
 - **Remaining acceptance proof**: `docker compose run --rm dev pnpm install --frozen-lockfile` exits 0, plus `curl.exe -i http://localhost:3000/health` visibly returns HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}`.
 - Neither check has been independently run by the assistant (Docker is unavailable in this execution environment). Composer `dev` and remote deployment remain separate pending gates.
 
+## User follow-up (2026-10-12): frozen installation and HTTP check
+
+The user confirmed that the previous validation steps completed without issues. The immediately preceding instructions were:
+
+```powershell
+docker compose run --rm dev pnpm install --frozen-lockfile
+curl.exe -i http://localhost:3000/health
+```
+
+Classify these as **user-reported successful**. The raw frozen-install exit code, HTTP status line, and JSON body are not attached in the conversation. The assistant has not performed an independent Docker execution, so those exact fields remain evidence to capture before final closure. The committed lockfile already exists; do not regenerate or upgrade it merely for this gate.
+
+## Next gate: Composer-managed local execution (no cloud credentials)
+
+Prisma's current Composer documentation requires a build before `prisma dev module.ts`. The existing script `pnpm compute:dev` invokes that command. Unlike the standalone Hono container, this runs the Composer declaration/runtime pipeline.
+
+**Do not assume that a port printed as `localhost` inside Docker is reachable on Windows.** Run a separate disposable container and test the actual port from **inside that same container**. The existing Hono `dev` service can remain running because the one-off container does not publish the host's 3000 port.
+
+PowerShell terminal 1:
+
+```powershell
+git switch spike/compute-monorepo-foundation
+git pull --ff-only
+docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev
+```
+
+Wait for `dev: ready` and copy the port printed for `public-api`. If Composer reports an error before ready, record that error and stop; **do not** infer the reason or modify Docker again without evidence.
+
+PowerShell terminal 2, with the port replaced by the one Composer printed (3000 is illustrative only):
+
+```powershell
+docker exec stack-parity-composer-check bun -e "const r = await fetch('http://127.0.0.1:3000/health'); console.log(r.status, await r.text()); if (!r.ok) process.exit(1)"
+```
+
+Expected HTTP status 200 and `{"status":"ok","contractVersion":"spike-001"}`. Record the exact response and the `dev: ready` service name/port. End the first command with Ctrl+C. A container exits and is removed by `--rm`. Do **not** authenticate or deploy as part of this local check.
+
+This validation is intentionally separate from Docker standalone `/health`. It is **not yet executed** and does not change the acceptance boundary.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | PARTIAL | Lockfile committed at 2395318; install+rebuild exit 0 user-reported; frozen-lockfile reinstallation not yet reported |
+| AC-01 clean install + committed lockfile | USER-REPORTED PASS / RAW LOG PENDING | Lockfile committed at 2395318; user indicates frozen install was successful; exact exit code not captured |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
-| AC-04 local /health | USER-REPORTED REACHABLE | Port 3000 works; exact HTTP 200 JSON and Composer dev remain unverified |
+| AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
 | AC-05 Composer declaration | PREPARED | Requires installed-version validation |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
