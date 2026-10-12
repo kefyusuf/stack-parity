@@ -192,6 +192,7 @@ PowerShell terminal 1:
 ```powershell
 git switch spike/compute-monorepo-foundation
 git pull --ff-only
+docker compose run --rm dev pnpm build
 docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev
 ```
 
