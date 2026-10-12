@@ -7,6 +7,8 @@
 
 Local development must work without a host installation of Node.js, Bun, or pnpm. Docker Desktop/Engine with Compose v2 is enough.
 
+An additional pnpm 11 security gate was identified after the first fixes: `ERR_PNPM_IGNORED_BUILDS`. The project now explicitly allows install scripts for only `esbuild` and `workerd`, the two blocked dependencies present in the user log. New, unreviewed build scripts still fail under `strictDepBuilds: true`.
+
 A previous version of this configuration had two usability/performance problems:
 
 1. `docker compose up dev` executed `pnpm --version` and **did not launch HTTP**.
@@ -21,9 +23,10 @@ Run these commands **from the repository root**:
 ```powershell
 docker compose build dev
 docker compose run --rm dev pnpm install --reporter=append-only
+docker compose run --rm dev pnpm rebuild esbuild workerd
 ```
 
-The first installation can take time and produce `deprecated subdependencies` warnings from transitive packages. Such warnings are **not themselves failures**. A transient `ERR_PNPM_ENODATA` retry also does not conclusively indicate failure; let the command finish and check its exit status.
+The first installation can take time and produce `deprecated subdependencies` warnings from transitive packages. Such warnings are **not themselves failures**. A transient `ERR_PNPM_ENODATA` or `UND_ERR_SOCKET` retry does not conclusively indicate failure when the retry succeeds. By contrast, `ERR_PNPM_IGNORED_BUILDS` **is an install failure** on pnpm 11. It is addressed here by `allowBuilds` in the workspace file, **not** by disabling install-script security or approving all packages. `pnpm rebuild esbuild workerd` runs allowed scripts for already-installed packages after the earlier failed attempt.
 
 **Do not run typecheck, tests, or build before install exits successfully.** If the installation is interrupted (Ctrl+C), later pnpm commands can attempt dependency installation again. A completed install must return to the prompt and end successfully. It should generate `pnpm-lock.yaml`, which we must commit after verification.
 
@@ -34,6 +37,14 @@ docker compose run --rm dev pnpm store path
 ```
 
 Expected base path begins with `/workspace/node_modules/.pnpm-store/`, not `/workspace/.pnpm-store/`.
+
+If install finishes with `Issues with peer dependencies found`, first verify actual peers without changing dependencies:
+
+```powershell
+docker compose run --rm dev pnpm peers check
+```
+
+Keep peer warning resolution separate from this install-script fix unless a failing test proves a compatibility issue.
 
 ## Verify locally, without Composer or cloud access
 
