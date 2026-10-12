@@ -451,11 +451,17 @@ HTTP 200
 
 GitHub state checked after this gate: `package.json` pins Composer `0.29.1`, but the committed `pnpm-lock.yaml` importers still pin Composer `0.25.0`. The user has a locally regenerated lockfile from successful pnpm installation. Verify `pnpm install --frozen-lockfile` **in the user's local checkout**, inspect that only the intended lockfile was staged, then commit/push it. Re-run typecheck/test/build against the frozen set to close reproducibility evidence. Hold remote deployment until the lockfile is consistent and those tests pass.
 
+## Frozen-lockfile local gate (user report, 2026-10-12)
+
+After the Composer-managed `/health` request succeeded, the user executed the previously supplied `docker compose run --rm dev pnpm install --frozen-lockfile` and reported exit code **0**. This confirms the **current local working-tree lockfile** is coherent with the manifest for pnpm 11 and installs successfully in the Docker development image. Full install log not provided.
+
+This is a **local workspace PASS only**. At the time of verification the `pnpm-lock.yaml` committed on GitHub still pins Composer `0.25.0`; the manifest pins Composer `0.29.1`. The regenerated lockfile must be staged, reviewed, committed and pushed to make frozen installs reproducible from GitHub. Next gate: rerun `pnpm typecheck`, `pnpm test`, `pnpm build` against the frozen installation, then commit/push **only** the regenerated lockfile once all commands pass. Do not restore the earlier workspace-config stash or modify dependencies.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | BLOCKED / UPDATE REQUIRED | Committed pnpm-lock still pins Composer 0.25.0 while package manifest pins 0.29.1; local regenerated lockfile and frozen install verification required |
+| AC-01 clean install + committed lockfile | LOCAL FROZEN INSTALL PASS / COMMIT PENDING | User reports Docker pnpm install --frozen-lockfile exit code 0; remote GitHub lockfile still pins Composer 0.25.0, must commit local regenerated 0.29.1 lockfile |
 | AC-02 workspace package import | USER-EXECUTED RUNTIME PASS | Composer-managed HTTP response contains shared workspace contractVersion spike-001; import is explicit in Hono source |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
