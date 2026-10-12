@@ -1,3 +1,11 @@
 packages:
   - "packages/*"
   - "services/*"
+
+# pnpm 11 requires an explicit policy for dependency lifecycle scripts.
+# These two packages were the only blocked builds in the Docker install log.
+# Keep strict behavior for any future unreviewed dependency.
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true
+  workerd: true
