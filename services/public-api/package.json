@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "bun build src/server.ts --target=bun --outfile dist/server.mjs",
-    "test": "bun test"
+    "test": "bun test",
+    "dev:standalone": "bun run src/local.ts"
   },
   "dependencies": {
     "@stack-parity/contracts": "workspace:*",
