@@ -2,7 +2,7 @@ import node from "@prisma/composer/node";
 import { compute } from "@prisma/composer-prisma-cloud";
 
 export default compute({
-  name: "public-api",
+  name: "publicApi",
   deps: {},
   build: node({
     module: import.meta.url,
