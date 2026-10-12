@@ -1,0 +1,27 @@
+{
+  "name": "stack-parity",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@11.28.5",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm --filter @stack-parity/public-api test",
+    "compute:dev": "prisma dev module.ts",
+    "compute:deploy": "prisma deploy module.ts"
+  },
+  "dependencies": {
+    "@prisma/composer": "0.25.0",
+    "@prisma/composer-prisma-cloud": "0.25.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "prisma": "8.0.0-rc.22",
+    "turbo": "2.11.2",
+    "typescript": "7.0.2"
+  }
+}
