@@ -15,8 +15,8 @@
     "compute:deploy": "prisma deploy module.ts"
   },
   "dependencies": {
-    "@prisma/composer": "0.25.0",
-    "@prisma/composer-prisma-cloud": "0.25.0"
+    "@prisma/composer": "0.29.1",
+    "@prisma/composer-prisma-cloud": "0.29.1"
   },
   "devDependencies": {
     "@effect/platform-bun": "4.0.0-rc.115",
