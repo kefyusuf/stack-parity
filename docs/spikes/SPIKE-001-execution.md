@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED — Composer Effect-family version conflict; pnpm override prepared, lockfile sync/retest pending**
+**Status: BLOCKED — Composer CLI/core release mismatch; matched 0.29.1 upgrade committed, lockfile and runtime retest pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -293,6 +293,41 @@ If the error persists, capture the actual new path and exit code before adjustin
 
 The `prisma skills sync` advisory is unrelated to the Effect runtime mismatch. No cloud authentication or deploy should be performed until local Composer is verified.
 
+## Composer local fourth attempt — CLI/Core API incompatibility (2026-10-12)
+
+User's local Windows checkout was successfully advanced to `cf94eb1` after stashing a local `minimumReleaseAgeExclude: effect@4.0.3` workspace change. A separate, locally modified `pnpm-lock.yaml` remained uncommitted. The user reported `pnpm install` exit `0`, a successful cache-miss Bun build, and `compute:dev` reaching the emulator before Alchemy failed:
+
+```text
+[dev] compute emulator ready at http://127.0.0.1:4300
+SyntaxError: The requested module '@prisma/composer/local-target' does not
+provide an export named 'devState'
+import { DEV_DIR, devState, localTargetProviders, resolveLocalTargets } from
+'@prisma/composer/local-target';
+[ELIFECYCLE] Command failed with exit code 1.
+```
+
+The `prisma skills sync` message and newer Alchemy update notice are **not** the cause of the error. Do not upgrade Alchemy independently.
+
+**Confirmed cause from official version-controlled source (not inferred from the error alone):**
+- The installed Prisma CLI is `prisma@8.0.0-rc.22`. Upstream `prisma/prisma-cli` tag `v8.0.0-rc.22` explicitly declares `@prisma/composer-cli: 0.29.1` in `packages/prisma/package.json`.
+- The application pinned `@prisma/composer: 0.25.0` and `@prisma/composer-prisma-cloud: 0.25.0`.
+- Upstream `prisma/composer` `v0.25.0` `packages/0-framework/1-core/core/src/exports/local-target.ts` exports `localTargetProviders` and `resolveLocalTargets` but **not** `devState`.
+- Upstream `prisma/composer` `v0.29.1` exports **`devState`** from the same entry.
+- `@prisma/composer-prisma-cloud@0.29.1` declares its `@prisma/composer` dependency at `0.29.1` and retains the Effect `4.0.0-rc.115` family currently pinned by the project.
+
+**Targeted patch:** root `package.json` now pins `@prisma/composer` and `@prisma/composer-prisma-cloud` to `0.29.1`. Prisma CLI `8.0.0-rc.22`, Hono, Docker, dependency-script security policy and existing Effect pins remain unchanged. This is a release-coherence fix, not a blanket upgrade.
+
+**Next local commands** (do not overwrite the user's uncommitted lockfile or pop the saved stash):
+
+```powershell
+git status --short
+git pull --ff-only
+docker compose run --rm dev pnpm install --reporter=append-only
+$LASTEXITCODE
+```
+
+On successful install, rerun typecheck, test and build; then launch `pnpm compute:dev` and record the actual output. Regenerate and commit the pnpm-owned lockfile only after checking install/test results; verify `--frozen-lockfile` against the committed version. If a new error occurs, preserve it without broadening architecture or claiming Composer has passed. The local Compose `dev` Hono server is a separate smoke test, not the Composer runtime.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -301,7 +336,7 @@ The `prisma skills sync` advisory is unrelated to the Effect runtime mismatch. N
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
-| AC-05 Composer declaration | BLOCKED / FIX PREPARED | Direct platform peers enabled resolution of effect@4.0.3, conflicting with Composer's effect@rc.115; pnpm 11 overrides added, reinstall/retest pending |
+| AC-05 Composer declaration | BLOCKED / RELEASE MATCH PATCHED | Actual CLI imports devState missing from Composer 0.25.0; Prisma CLI rc.22 requires Composer 0.29.1; version pins updated, runtime retest pending |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
