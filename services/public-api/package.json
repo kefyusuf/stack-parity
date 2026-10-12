@@ -1,0 +1,14 @@
+{
+  "name": "@stack-parity/public-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/server.ts --target=bun --outfile dist/server.mjs",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@stack-parity/contracts": "workspace:*",
+    "hono": "4.13.7"
+  }
+}
