@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — Composer graph validation failed; alphanumeric service ID correction awaits retest**
+**Status: BLOCKED — Alchemy CLI peer dependency error; explicit Effect platform peer fix awaits pnpm lockfile sync and retest**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -208,6 +208,55 @@ Expected HTTP status 200 and `{"status":"ok","contractVersion":"spike-001"}`. Re
 
 This validation is intentionally separate from Docker standalone `/health`. It is **not yet executed** and does not change the acceptance boundary.
 
+## Composer dev second attempt — Alchemy optional peer failure (2026-10-12)
+
+The user pulled commit `acf636a`, and `docker compose run --rm dev pnpm build` **succeeded**:
+
+```text
+@stack-parity/public-api:build: Bundled 161 modules in 57ms
+Tasks: 1 successful, 1 total
+```
+
+`docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` passed the earlier invalid-ID validation and printed:
+
+```text
+[dev] compute emulator ready at http://127.0.0.1:4300
+Alchemy could not load the required peer dependency "@effect/platform-node".
+Install a compatible version of "@effect/platform-node" in the same project as "alchemy".
+[ELIFECYCLE] Command failed with exit code 1.
+```
+
+**Interpretation:** the underlying local compute emulator launched, but the Composer/Alchemy converge failed. This is not a passing Composer local runtime gate, and port 4300 is **not** an independently verified public API endpoint. The Prisma agent skill sync message is a separate advisory.
+
+**Verified dependency evidence:** committed `pnpm-lock.yaml` already contains `@effect/platform-node@4.0.0-rc.115` and `@effect/platform-bun@4.0.0-rc.115` as transitive dependencies, but root `package.json` previously declared neither directly. Prisma Composer's own dogfooding notes document the Alchemy CLI's practical runtime requirement for both packages despite optional peer dependency metadata. This is consistent with a pnpm isolated-dependency resolution problem; it is not proof that no other problem remains.
+
+**Minimal fix committed:** declare those exact versions in root `devDependencies`. No new framework, service, Docker image, Postgres, or general Effect override was introduced.
+
+**Critical:** the committed lockfile has not yet been regenerated after the manifest change. Do **not** attempt `--frozen-lockfile` until pnpm regenerates and commits it. On the existing Docker volumes, run:
+
+```powershell
+git pull --ff-only
+docker compose run --rm dev pnpm install --reporter=append-only
+$LASTEXITCODE
+```
+
+Only if exit code is `0`, commit the pnpm-generated lockfile from the working tree:
+
+```powershell
+git add pnpm-lock.yaml
+git commit -m "chore(spike-001): lock explicit Alchemy platform peers"
+git push origin spike/compute-monorepo-foundation
+```
+
+Then rerun the **same Composer gate** without changing infrastructure:
+
+```powershell
+docker compose run --rm dev pnpm build
+docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev
+```
+
+If Composer reaches `dev: ready`, verify the printed service port from inside that exact container as instructed in the prior gate. Preserve any failure output for a targeted correction. Cloud authentication/deployment remain out of this retest.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -216,7 +265,7 @@ This validation is intentionally separate from Docker standalone `/health`. It i
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
-| AC-05 Composer declaration | FAILED / FIX PREPARED | Actual CLI rejected hyphenated provision ID; service renamed publicApi; retest pending |
+| AC-05 Composer declaration | BLOCKED / FIX PREPARED | Alphanumeric provision ID now accepted; Alchemy CLI could not load @effect/platform-node, explicit node/bun peers added; lockfile sync and runtime retest pending |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
