@@ -1,12 +1,12 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED — user Docker installation interrupted; fix prepared, retest required**
+**Status: IN PROGRESS — dependency install/rebuild reported successful; typecheck/test/build and deployment pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
 ## Environment
 
-The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. A user attempted the Docker toolchain installation, but the install was interrupted before successful completion. A lockfile has **not been verified or committed**. No successful typecheck, build, unit test, local Composer run, or cloud deployment has been established.
+The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. No successful typecheck, build, unit test, local Composer run, or cloud deployment has been established.
 
 Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
 
@@ -112,15 +112,26 @@ The subsequent Docker install **downloaded and linked all 442 packages** and end
 
 This is a **real install failure under pnpm 11**, even though package installation progress reached `done`. It is not caused by deprecated package warnings. The transient `UND_ERR_SOCKET` error recovered and the pnpm store moved to `/workspace/node_modules/.pnpm-store/v11` as intended.
 
-**Narrow corrective change:** `pnpm-workspace.yaml` now specifies `strictDepBuilds: true` and `allowBuilds: { esbuild: true, workerd: true }`. This follows pnpm 11 security policy; it does not relax checks for future dependencies. Execute `pnpm install` again, then `pnpm rebuild esbuild workerd` to run previously blocked lifecycle scripts. **No successful retest is yet recorded.**
+**Narrow corrective change:** `pnpm-workspace.yaml` now specifies `strictDepBuilds: true` and `allowBuilds: { esbuild: true, workerd: true }`. This follows pnpm 11 security policy; it does not relax checks for future dependencies. Execute `pnpm install` again, then `pnpm rebuild esbuild workerd` to run previously blocked lifecycle scripts. **User-reported retest:** both commands completed with exit code `0` on 2026-10-12. Full logs were not captured; clean install from a committed lockfile remains unverified.
 
 The install log also mentions unresolved peer dependencies. Run `pnpm peers check` after a successful install and record details without speculative upgrades.
+
+## User-reported success (2026-10-12)
+
+The user reported exit code `0` for both commands after the allowBuilds change:
+
+```powershell
+docker compose run --rm dev pnpm install --reporter=append-only
+docker compose run --rm dev pnpm rebuild esbuild workerd
+```
+
+This validates the immediate installer/rebuild blocker **as user-reported execution evidence**. It does not establish a clean frozen-lockfile install, correct runtime behavior, or any Prisma Compute deployment. The lockfile is still absent from the GitHub branch and must be committed after verification. Next gate: `pnpm typecheck`, `pnpm test`, and `pnpm build` inside the same Docker toolchain.
 
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
-| AC-01 clean install + committed lockfile | BLOCKED | Second install linked all packages but pnpm 11 rejected esbuild/workerd build scripts; explicit allowBuilds patch requires retest |
+| AC-01 clean install + committed lockfile | PARTIAL | User reports install+rebuild exit code 0 after allowBuilds; committed lockfile and frozen reinstallation pending |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | NOT RUN | Requires toolchain |
 | AC-04 local /health | NOT RUN | Old Compose default did not start a server; retest standalone and separately Composer dev |
