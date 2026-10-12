@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED ON COMPOSER-MANAGED HTTP — emulators listening but no app worker/port; bounded local state recovery under consideration**
+**Status: IN PROGRESS — fresh local Composer converge advertises publicApi; HTTP, lockfile and cloud deployment gates pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -399,6 +399,42 @@ The preceding `prisma dev` log says `Plan · 4 no change`, `Stack deployed`, `de
 
 The upstream guide supports `prisma dev module.ts --fresh` for an app **without databases** (it notes limitations for apps with databases). This spike provisions one Hono service and zero databases. However, `--fresh` deliberately wipes the **local app's emulator instances and data**; do not run without treating this as a bounded reset and giving the user an opportunity to preserve any local data. No Docker volumes or unrelated workspace files should be deleted. Do not deploy remotely or close the issue before Composer-managed HTTP 200 is obtained.
 
+## Local Composer recovery — `--fresh` (user log, 2026-10-12)
+
+The user stopped the previous Composer process, saved a timestamped backup of any project-local `.alchemy` and `.prisma-composer` directories at `E:\\projects\\stack-parity-local-state-20261012-145639`, and ran:
+
+```powershell
+docker compose run --rm --name stack-parity-composer-check dev pnpm exec prisma dev module.ts --fresh
+```
+
+User-provided output:
+
+```text
+[dev] compute emulator ready at http://127.0.0.1:4300
+✓ Plan ready (1.1s)
+Plan · 4 created
+✓ COMPOSER_PUBLICAPI_ORIGIN-var (Prisma.EnvironmentVariable) created
+✓ COMPOSER_PUBLICAPI_PORT-var (Prisma.EnvironmentVariable) created
+✓ publicApi-deploy (Prisma.Deployment) created
+✓ publicApi-svc (Prisma.App) created
+Stack deployed (4/4)
+dev: ready
+publicApi: http://localhost:3000
+```
+
+**Result:** A clean local Composer converge now creates four resources and advertises `publicApi` at port 3000. This is strong evidence that the previous persistent local state was responsible for the `4 no change`/missing service URL, but does not by itself establish the precise stale-state mechanism.
+
+**Next gate, not yet observed:** While the `--fresh` command remains running, make the HTTP request **inside the same named container**, not from the host's unrelated standalone Hono service:
+
+```powershell
+docker exec stack-parity-composer-check node -e "fetch('http://127.0.0.1:3000/health').then(async r => { console.log('HTTP', r.status); console.log(await r.text()); process.exit(r.status === 200 ? 0 : 1) }).catch(e => { console.error(e.message); process.exit(1) })"
+$LASTEXITCODE
+```
+
+Require `HTTP 200`, `{"status":"ok","contractVersion":"spike-001"}`, and exit code 0 before marking the Composer-managed HTTP gate PASS.
+
+**Outstanding independent blockers:** The GitHub-committed `pnpm-lock.yaml` still lists Composer `0.25.0`; the package manifests now require `0.29.1`. The pnpm-generated lockfile needs review and commit, followed by frozen-lockfile test. Real remote Prisma Compute deployment and public HTTP 200 are pending. Do not merge PR #3, close Issue #1, or add new product scope yet.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -407,7 +443,7 @@ The upstream guide supports `prisma dev module.ts --fresh` for an app **without 
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
-| AC-05 Composer declaration | LOCAL CONVERGE PASS / APP WORKER MISSING | Prisma dev ready and emulator 4300 live; docker top contains no Bun service and TCP 3000 is not listening; stale state is a hypothesis, not yet resolved |
+| AC-05 Composer declaration | LOCAL FRESH CONVERGE PASS / HTTP PENDING | `prisma dev module.ts --fresh` created four resources, printed `Stack deployed (4/4)`, `dev: ready`, and `publicApi: http://localhost:3000`; HTTP still needs direct test |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
