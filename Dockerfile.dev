@@ -1,0 +1,20 @@
+# Local development toolchain only. NOT a production or Prisma Compute image.
+FROM node:24-bookworm-slim
+
+# Both CLIs are available without host installations.
+# Versions are aligned with the repository's pnpm packageManager setting.
+RUN npm install --global pnpm@11.28.5 bun@1.4.3 \
+    && node --version \
+    && pnpm --version \
+    && bun --version
+
+WORKDIR /workspace
+
+# The repository is mounted by Compose; no code is baked into this image.
+RUN mkdir -p /workspace/node_modules \
+    /workspace/packages/contracts/node_modules \
+    /workspace/services/public-api/node_modules \
+    && chown -R node:node /workspace
+
+USER node
+CMD ["pnpm", "--version"]
