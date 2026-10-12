@@ -328,6 +328,18 @@ $LASTEXITCODE
 
 On successful install, rerun typecheck, test and build; then launch `pnpm compute:dev` and record the actual output. Regenerate and commit the pnpm-owned lockfile only after checking install/test results; verify `--frozen-lockfile` against the committed version. If a new error occurs, preserve it without broadening architecture or claiming Composer has passed. The local Compose `dev` Hono server is a separate smoke test, not the Composer runtime.
 
+## Standalone Docker HTTP visual evidence (2026-10-12)
+
+The user supplied a screenshot of `http://localhost:3000/health` in a desktop browser. It visibly renders:
+
+```json
+{"status":"ok","contractVersion":"spike-001"}
+```
+
+This confirms the expected **response body** was served by the standalone Docker Hono process. The screenshot does not display the HTTP response status code, so a `curl.exe -i` result would be needed to record an explicit `HTTP 200` assertion. The route `/` returning `404 Not Found` is expected because only `/health` is defined; no new root route is required.
+
+**Scope boundary:** standalone `localhost:3000` is not Prisma Composer's provisioned runtime and is not a public Prisma Compute deployment. The latest Composer version-alignment patch changed `@prisma/composer` and `@prisma/composer-prisma-cloud` to `0.29.1`; no user-run Composer retest after that patch has yet been provided. The locally modified `pnpm-lock.yaml` should be regenerated with pnpm and committed after the updated install checks pass.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -335,7 +347,7 @@ On successful install, rerun typecheck, test and build; then launch `pnpm comput
 | AC-01 clean install + committed lockfile | USER-REPORTED PASS / RAW LOG PENDING | Lockfile committed at 2395318; user indicates frozen install was successful; exact exit code not captured |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
-| AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
+| AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
 | AC-05 Composer declaration | BLOCKED / RELEASE MATCH PATCHED | Actual CLI imports devState missing from Composer 0.25.0; Prisma CLI rc.22 requires Composer 0.29.1; version pins updated, runtime retest pending |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
