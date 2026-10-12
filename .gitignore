@@ -7,4 +7,6 @@ dist/
 !.env.example
 .npmrc
 .prisma/
+.prisma-composer/
+.alchemy/
 .DS_Store
