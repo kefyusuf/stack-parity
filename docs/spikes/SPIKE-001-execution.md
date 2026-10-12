@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED — Alchemy CLI peer dependency error; explicit Effect platform peer fix awaits pnpm lockfile sync and retest**
+**Status: BLOCKED — Composer Effect-family version conflict; pnpm override prepared, lockfile sync/retest pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -257,6 +257,42 @@ docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev
 
 If Composer reaches `dev: ready`, verify the printed service port from inside that exact container as instructed in the prior gate. Preserve any failure output for a targeted correction. Cloud authentication/deployment remain out of this retest.
 
+## Composer dev third attempt — Effect package version conflict (2026-10-12)
+
+After adding direct `@effect/platform-node@4.0.0-rc.115` and `@effect/platform-bun@4.0.0-rc.115`, the user reran `docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` and observed:
+
+```text
+[CLI.CONFIG_UNREADABLE] /workspace/prisma.config.ts could not be evaluated:
+Cannot find module
+'/workspace/node_modules/.pnpm/@effect+platform-node@4.0.0-rc.115_effect@4.0.3_redis@6.3.0/node_modules/effect/dist/unstable/http/Cookies.js'
+[ELIFECYCLE] Command failed with exit code 2.
+```
+
+**Root cause backed by the path:** `@effect/platform-node` `4.0.0-rc.115` was paired with `effect` `4.0.3` during the new install. The previous committed lockfile had Composer `0.25.0` pinned to `effect` `4.0.0-rc.115`, but peer resolution changed when direct platform packages were added. The stale lockfile does not describe this new dependency tree.
+
+**Prisma's official deployment documentation confirms** that `CLI.CONFIG_UNREADABLE` with missing `effect/dist/...` modules can arise from Effect version mismatches, and states that pnpm 11 reads `overrides` from `pnpm-workspace.yaml` (not the `pnpm` field of package.json).
+
+**Narrow corrective change:** preserve the existing Composer and Prisma versions, and pin `effect` to `4.0.0-rc.115` in `pnpm-workspace.yaml`; additionally align only the Effect-family transitive packages found at both `rc.115` and `4.0.3` in the previous committed lockfile: `@effect/platform-node-shared`, `@effect/sql-d1`, `@effect/sql-sqlite-do` and `@effect/vitest`. `@effect/platform-node` and `@effect/platform-bun` were already explicitly pinned at `rc.115`. No Docker architecture change, broad dependency upgrade or new product scope.
+
+**This is a hypothesis-driven fix awaiting user execution, not a successful runtime result.** Reinstall normally so pnpm can update `pnpm-lock.yaml`. Do NOT run frozen-lockfile mode until it has been regenerated, verified and committed.
+
+```powershell
+git pull --ff-only
+docker compose run --rm dev pnpm install --reporter=append-only
+$LASTEXITCODE
+```
+
+If the installer exits `0`, check the package resolution and retry the Composer gate:
+
+```powershell
+docker compose run --rm dev pnpm build
+docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev
+```
+
+If the error persists, capture the actual new path and exit code before adjusting any further packages. If local Composer succeeds, verify the service port and record the matching HTTP contract response. Once the dependency graph is working, commit the pnpm-generated lockfile on this branch and verify `pnpm install --frozen-lockfile`.
+
+The `prisma skills sync` advisory is unrelated to the Effect runtime mismatch. No cloud authentication or deploy should be performed until local Composer is verified.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -265,7 +301,7 @@ If Composer reaches `dev: ready`, verify the printed service port from inside th
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | USER-REPORTED PASS / COMPOSER PENDING | Standalone Hono port and final HTTP check reported working; exact HTTP response and Composer-managed local run still need capture |
-| AC-05 Composer declaration | BLOCKED / FIX PREPARED | Alphanumeric provision ID now accepted; Alchemy CLI could not load @effect/platform-node, explicit node/bun peers added; lockfile sync and runtime retest pending |
+| AC-05 Composer declaration | BLOCKED / FIX PREPARED | Direct platform peers enabled resolution of effect@4.0.3, conflicting with Composer's effect@rc.115; pnpm 11 overrides added, reinstall/retest pending |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
