@@ -1,6 +1,6 @@
 # SPIKE-001 — Docker development (Windows/macOS/Linux)
 
-**Status: FIX PREPARED — not container-validated by the assistant.**
+**Status: USER-EXECUTED PASS — frozen Docker install, typecheck, Bun test, Turbo build, and local Hono HTTP verified; see execution evidence.**
 **Scope:** A single local Linux toolchain and Hono endpoint. No production Docker deployment or database.
 
 ## Why this workflow exists
