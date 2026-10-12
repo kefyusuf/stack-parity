@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED — Composer CLI/core release mismatch; matched 0.29.1 upgrade committed, lockfile and runtime retest pending**
+**Status: IN PROGRESS — Composer local dev reached 'dev: ready'; Composer-served HTTP, committed lockfile, and remote deploy pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -340,6 +340,38 @@ This confirms the expected **response body** was served by the standalone Docker
 
 **Scope boundary:** standalone `localhost:3000` is not Prisma Composer's provisioned runtime and is not a public Prisma Compute deployment. The latest Composer version-alignment patch changed `@prisma/composer` and `@prisma/composer-prisma-cloud` to `0.29.1`; no user-run Composer retest after that patch has yet been provided. The locally modified `pnpm-lock.yaml` should be regenerated with pnpm and committed after the updated install checks pass.
 
+## Composer dev startup success (user log, 2026-10-12)
+
+Following release alignment to `@prisma/composer@0.29.1` and `@prisma/composer-prisma-cloud@0.29.1`, the user supplied the following successful **local Composer startup** result:
+
+```text
+$ prisma dev module.ts
+[dev] compute emulator ready at http://127.0.0.1:4300
+✓ Plan ready (1.2s)
+Plan · 4 no change
+✓ COMPOSER_PUBLICAPI_ORIGIN-var (Prisma.EnvironmentVariable) no change
+✓ COMPOSER_PUBLICAPI_PORT-var (Prisma.EnvironmentVariable) no change
+✓ publicApi-deploy (Prisma.Deployment) no change
+✓ publicApi-svc (Prisma.App) no change
+Stack deployed
+dev: ready
+```
+
+No Alchemy export error, Effect version error or Composer graph error occurred. The `alchemy 2.0.0-beta.81 is available` notice is informational, not a reason to upgrade or modify the dependency tree. The phrase `Plan · 4 no change` is a **warm-state no-op**, not evidence that a fresh cloud deployment happened.
+
+**Precisely verified:** Composer/Alchemy local converge reached `dev: ready`. **Still not verified:** Composer-managed `publicApi` HTTP request and status, or any **remote** Prisma Compute deployment.
+
+The existing standalone Hono container already binds Windows `localhost:3000`. To avoid testing that process by mistake, probe from **inside the named Composer container** with the local default service port `3000` (the Composer docs state this as the default). With the original `docker compose run --rm --name stack-parity-composer-check dev pnpm compute:dev` process still running, use a **second PowerShell terminal**:
+
+```powershell
+docker exec stack-parity-composer-check node -e "fetch('http://127.0.0.1:3000/health').then(async r => { console.log('HTTP', r.status); console.log(await r.text()); process.exit(r.status === 200 ? 0 : 1) }).catch(e => { console.error(e.message); process.exit(1) })"
+$LASTEXITCODE
+```
+
+Expected `HTTP 200` and `{"status":"ok","contractVersion":"spike-001"}`. If the port is different or a connection fails, inspect Composer's actual exposed service port and runtime logs rather than presuming the Hono standalone check covers it. The emulator control port `4300` is not automatically the app's HTTP port.
+
+The `pnpm-lock.yaml` committed in GitHub still records Composer `0.25.0`, so it is outdated after the patch. The user's locally regenerated lockfile needs review/commit, followed by frozen-lockfile validation; do not attempt a remote deploy before closing the local gate.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -348,7 +380,7 @@ This confirms the expected **response body** was served by the standalone Docker
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
-| AC-05 Composer declaration | BLOCKED / RELEASE MATCH PATCHED | Actual CLI imports devState missing from Composer 0.25.0; Prisma CLI rc.22 requires Composer 0.29.1; version pins updated, runtime retest pending |
+| AC-05 Composer declaration | USER-REPORTED LOCAL STARTUP PASS | After Composer 0.29.1 alignment, log shows Plan ready, 4 no change, Stack deployed, dev: ready; HTTP and fresh cloud deploy remain separate |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
