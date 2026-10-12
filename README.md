@@ -26,8 +26,8 @@ Later milestones may add Astro (content), Next.js (storefront), Nuxt (merchant U
 - Evidence before expansion
 - Prisma Compute is the initial deployment target, not a permanent lock-in requirement
 
-See the upcoming bootstrap documentation and SPIKE-001 issue for scope, acceptance criteria, and implementation order.
+Read the [B0 Bootstrap Brief](docs/bootstrap-brief-v0.1.md), [SPIKE-001 acceptance gate](docs/spikes/SPIKE-001.md), [ADR-0001](docs/adr/0001-project-thesis-and-boundaries.md), and [Issue #1](https://github.com/kefyusuf/stack-parity/issues/1).
 
 ## License
 
-MIT (to be added through the bootstrap pull request).
+[MIT](LICENSE).
