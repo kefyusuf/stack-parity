@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: BLOCKED ON COMPOSER-MANAGED HTTP — local converge ready but internal /health fetch failed; process and listener diagnosis pending**
+**Status: BLOCKED ON COMPOSER-MANAGED HTTP — emulators listening but no app worker/port; bounded local state recovery under consideration**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -380,6 +380,25 @@ The user reports `docker exec stack-parity-composer-check node -e "fetch('http:/
 
 **Read-only next diagnostics:** `docker ps --filter "name=stack-parity-composer-check"`, `docker top stack-parity-composer-check`, and inspect TCP LISTEN entries from `/proc/net/tcp` and `/proc/net/tcp6` inside that same container. Check for a Bun server process and the actual exposed port before any targeted retry or state recovery. Do not run `--fresh`, clear volumes or change Docker port mappings without evidence. Do not claim a public or local HTTP PASS.
 
+## Composer container listener diagnosis (user log, 2026-10-12)
+
+The user inspected the **running** `stack-parity-composer-check` container after the failed internal HTTP fetch.
+
+```text
+docker ps: stack-parity-composer-check Up 4 minutes (unhealthy)
+docker top: docker-init, pnpm compute:dev, prisma dev module.ts,
+            esbuild --service, .../composer-prisma-cloud/dist/compute-main.mjs --port 4300
+TCP LISTEN ports: 44189, 4300
+```
+
+No Bun/Hono server process appears in `docker top`, and **port 3000 is not listening in the Composer container**. The `unhealthy` Docker state is explained by the Compose healthcheck hardcoded to standalone `127.0.0.1:3000/health`, not a direct signal that `prisma dev` failed. Port 4300 belongs to the Compute emulator; port 44189 is unidentified from the current evidence. Do not present either as a service HTTP URL without proof.
+
+The preceding `prisma dev` log says `Plan · 4 no change`, `Stack deployed`, `dev: ready`, but does not list `publicApi: http://localhost:...` as Prisma's [local development guide](https://www.prisma.io/docs/composer/local-development) describes. That guide explicitly documents a **warm-state inconsistency where `dev` reports ready but no services are listed after emulators restart underneath a project**.
+
+**Likely but not yet confirmed mechanism:** this project uses `docker compose run --rm` (short-lived, new containers) while Alchemy/.prisma-composer project state under the repository bind mount persists; the emulator daemon shown in this run is new, but persisted state can report `no change` without provisioning a new service process. A clean local Composer state is an evidence-backed recovery candidate, **not a confirmed fix**.
+
+The upstream guide supports `prisma dev module.ts --fresh` for an app **without databases** (it notes limitations for apps with databases). This spike provisions one Hono service and zero databases. However, `--fresh` deliberately wipes the **local app's emulator instances and data**; do not run without treating this as a bounded reset and giving the user an opportunity to preserve any local data. No Docker volumes or unrelated workspace files should be deleted. Do not deploy remotely or close the issue before Composer-managed HTTP 200 is obtained.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -388,7 +407,7 @@ The user reports `docker exec stack-parity-composer-check node -e "fetch('http:/
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
 | AC-04 local /health | BODY VERIFIED / STATUS PENDING / COMPOSER PENDING | Browser screenshot shows expected JSON at localhost:3000/health; HTTP status header and Composer-managed run not yet captured |
-| AC-05 Composer declaration | LOCAL CONVERGE PASS / HTTP BLOCKED | After 0.29.1 alignment, Plan ready and dev: ready; internal 127.0.0.1:3000/health fetch failed; missing service URL and listener require investigation |
+| AC-05 Composer declaration | LOCAL CONVERGE PASS / APP WORKER MISSING | Prisma dev ready and emulator 4300 live; docker top contains no Bun service and TCP 3000 is not listening; stale state is a hypothesis, not yet resolved |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
