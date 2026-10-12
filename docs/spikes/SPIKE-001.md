@@ -16,12 +16,12 @@ stack-parity/
 ├── packages/contracts/      # exports CONTRACT_VERSION and HealthResponse
 ├── services/public-api/     # only Hono service
 ├── module.ts                # Prisma Composer root module
-├── prisma-composer.config.ts
+├── prisma.config.ts
 ├── pnpm-workspace.yaml
 └── turbo.json
 ```
 
-The exact Composer files/CLI commands must match the **installed package version** and the current official Prisma documentation.
+The current Composer config lives under the `composer` key in `prisma.config.ts` and is loaded by the Prisma CLI. Set `"type": "module"` in the root `package.json`. The exact Composer API/commands must match the **installed package version** and the current official Prisma documentation.
 
 **Endpoint:** `GET /health`
 
@@ -48,7 +48,7 @@ The imported value must originate in `packages/contracts`, via the package expor
 
 1. Check Node (Composer requires Node 22.18+, prefer stable Node 24), Bun, pnpm and Prisma CLI availability.
 2. Resolve dependencies and commit a clean lockfile.
-3. Synchronize the Composer agent skill from the installed version where applicable.
+3. Initialize/synchronize the Composer agent skill from the installed version where applicable; use only the project-local agent configuration.
 4. Typecheck and build.
 5. Run locally with `prisma dev module.ts`; request `/health`.
 6. Verify credentials with `prisma auth whoami`. If necessary, the human operator runs interactive `prisma auth login`.
