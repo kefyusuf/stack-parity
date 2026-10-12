@@ -1,0 +1,20 @@
+# Development toolchain only. Does not provision Prisma Compute or Postgres.
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /workspace
+    init: true
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./:/workspace
+      - workspace_node_modules:/workspace/node_modules
+      - contracts_node_modules:/workspace/packages/contracts/node_modules
+      - api_node_modules:/workspace/services/public-api/node_modules
+
+volumes:
+  workspace_node_modules:
+  contracts_node_modules:
+  api_node_modules:
