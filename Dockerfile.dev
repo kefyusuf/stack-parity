@@ -1,8 +1,7 @@
-# Local development toolchain only. NOT a production or Prisma Compute image.
+# SPIKE-001 local Linux development toolchain; not a production image.
 FROM node:24-bookworm-slim
 
-# Both CLIs are available without host installations.
-# Versions are aligned with the repository's pnpm packageManager setting.
+# Keep the same pinned versions as package.json and Docker Compose.
 RUN npm install --global pnpm@11.28.5 bun@1.4.3 \
     && node --version \
     && pnpm --version \
@@ -10,11 +9,12 @@ RUN npm install --global pnpm@11.28.5 bun@1.4.3 \
 
 WORKDIR /workspace
 
-# The repository is mounted by Compose; no code is baked into this image.
-RUN mkdir -p /workspace/node_modules \
+# Named volumes inherit these directories on first creation.
+# Keep pnpm's content-addressable store on the same Linux volume as node_modules,
+# not on the bind-mounted Windows project directory.
+RUN mkdir -p /workspace/node_modules/.pnpm-store \
     /workspace/packages/contracts/node_modules \
     /workspace/services/public-api/node_modules \
     && chown -R node:node /workspace
 
 USER node
-CMD ["pnpm", "--version"]
