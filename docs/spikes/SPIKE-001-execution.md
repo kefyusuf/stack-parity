@@ -1,12 +1,12 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: IN PROGRESS — install/rebuild/typecheck/unit tests/build reported successful; local HTTP and deployment pending**
+**Status: IN PROGRESS — local Docker port accessible; lockfile and remote deployment pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
 ## Environment
 
-The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. The user also reported exit code `0` for typecheck, unit tests, and build. No successful local HTTP check, Composer run, or cloud deployment has been established.
+The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A lockfile has **not been verified or committed**. The user also reported exit code `0` for typecheck, unit tests, and build. The user reports that port 3000 responds without a problem on 2026-10-12; the full HTTP status and JSON body were not captured in chat. Composer and cloud deployment remain unverified.
 
 Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
 
@@ -139,6 +139,12 @@ docker compose run --rm dev pnpm build
 
 This is **user-reported exit-code evidence**, not an independently captured test log. It supports moving to a standalone Docker HTTP smoke check without marking the entire SPIKE-001 PASS.
 
+## Local Docker HTTP report (2026-10-12)
+
+The user reports port `3000` is reachable and working following `docker compose up -d dev`. This confirms a useful local smoke result, but **the exact** `curl.exe -i http://localhost:3000/health` **status line and body have not been captured**. Do not mark the contract-specific HTTP assertion PASS without confirming `HTTP 200` and `contractVersion: "spike-001"`.
+
+The next non-code task is committing the generated `pnpm-lock.yaml` and validating `pnpm install --frozen-lockfile`. No scope expansion is authorized.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -146,7 +152,7 @@ This is **user-reported exit-code evidence**, not an independently captured test
 | AC-01 clean install + committed lockfile | PARTIAL | User reports install+rebuild exit code 0 after allowBuilds; committed lockfile and frozen reinstallation pending |
 | AC-02 workspace package import | CODE PREPARED | Runtime/bundle not verified |
 | AC-03 typecheck + build | USER-REPORTED PASS | Typecheck, unit test and build each returned exit code 0 on Windows Docker; full logs not captured |
-| AC-04 local /health | NOT RUN | Next: persistent Hono container and HTTP 200; Composer dev still separate |
+| AC-04 local /health | USER-REPORTED REACHABLE | Port 3000 works; exact HTTP 200 JSON and Composer dev remain unverified |
 | AC-05 Composer declaration | PREPARED | Requires installed-version validation |
 | AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
