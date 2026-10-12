@@ -1,6 +1,6 @@
 # SPIKE-001: pnpm/Turborepo Shared Contract → Hono → Prisma Compute
 
-- **Status:** IN PROGRESS — local Docker smoke reported successful; Composer local and cloud gates pending
+- **Status:** IN PROGRESS — local Docker, Composer-managed HTTP 200 and frozen-lockfile gates verified; remote Prisma Compute/public HTTP pending
 - **Issue:** #1
 - **Type:** Technical feasibility
 - **Milestone:** B0
