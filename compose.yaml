@@ -1,4 +1,5 @@
-# Development toolchain only. Does not provision Prisma Compute or Postgres.
+# Development-only toolchain + one Hono HTTP process.
+# No Postgres, production Docker image, or additional deployment target.
 services:
   dev:
     build:
@@ -6,6 +7,17 @@ services:
       dockerfile: Dockerfile.dev
     working_dir: /workspace
     init: true
+    environment:
+      PNPM_CONFIG_STORE_DIR: /workspace/node_modules/.pnpm-store
+    command:
+      - sh
+      - -ec
+      - |
+        if [ ! -f node_modules/.modules.yaml ] || [ ! -x node_modules/.bin/turbo ] || [ ! -d services/public-api/node_modules/hono ]; then
+          echo "Dependencies are not installed. Run: docker compose run --rm dev pnpm install --reporter=append-only"
+          exit 1
+        fi
+        exec pnpm --filter @stack-parity/public-api run dev:standalone
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -13,6 +25,16 @@ services:
       - workspace_node_modules:/workspace/node_modules
       - contracts_node_modules:/workspace/packages/contracts/node_modules
       - api_node_modules:/workspace/services/public-api/node_modules
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
 volumes:
   workspace_node_modules:
