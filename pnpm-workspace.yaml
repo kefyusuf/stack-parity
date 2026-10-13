@@ -10,7 +10,7 @@ allowBuilds:
   esbuild: true
   workerd: true
 
-# SPIKE-001: keep Composer 0.25.0 / Alchemy on one Effect RC release.
+# SPIKE-001: keep Composer 0.29.1 / Alchemy on one Effect RC release.
 # Current pnpm peer resolution otherwise combines @effect/platform-node@rc.115
 # with effect@4.0.3, which breaks Prisma's config evaluation (Cookies.js).
 # This pin set is temporary and must be revisited with any Composer upgrade.
