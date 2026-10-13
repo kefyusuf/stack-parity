@@ -1,14 +1,14 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: LOCAL PASS + REMOTE STAGE DEPLOY PASS; public /health HTTP 200 verification and final evidence pending**
+**Status: SPIKE-001 TECHNICAL ACCEPTANCE PASS — local checks, Composer, isolated Prisma Compute deployment, and external HTTP 200 verified; PR merge review pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
 ## Environment
 
-The branch was prepared without access to a compatible local Node/Bun/pnpm package installation environment. The user's initial Docker installation was interrupted, but after fixing the pnpm 11 lifecycle script policy, the user confirmed exit code `0` for both `pnpm install --reporter=append-only` and `pnpm rebuild esbuild workerd` (2026-10-12). A `pnpm-lock.yaml` file was committed to this branch on 2026-10-12 (`2395318b27e80a3287da73a32fe26791c2e93f5c`). Its workspace importers and pinned versions have been inspected structurally, but a frozen-lockfile reinstall has **not** been reported. The user also reported exit code `0` for typecheck, unit tests, and build. The user reports that port 3000 responds without a problem on 2026-10-12; the full HTTP status and JSON body were not captured in chat. Composer and cloud deployment remain unverified.
+The original Docker install and Composer launch encountered configuration and dependency problems; the chronological investigation and failed attempts below are preserved as historical evidence. **All final local and remote acceptance gates have since passed (2026-10-13)**. Refer to the final acceptance table and external HTTP proof at the end of this document rather than treating interim BLOCKED/PENDING observations as current.
 
-Version selections in `package.json` are provisional and **must be resolved by a real install**. The resulting `pnpm-lock.yaml` is required for the acceptance gate.
+Verified toolchain and pinned dependencies: Docker dev image `node:24-bookworm-slim` (Node 24), Bun `1.4.3`, pnpm `11.28.5`, Turborepo `2.11.2`, Prisma CLI `8.0.0-rc.22`, `@prisma/composer@0.29.1`, `@prisma/composer-prisma-cloud@0.29.1`. The final lockfile was committed as `041b120ace603be1c1ad3336508546e12788f42b`; frozen installation, typecheck, Bun test, forced uncached build, local Composer HTTP, and remote public HTTP all passed on user-executed commands.
 
 ## Optional Docker development path
 
@@ -597,6 +597,40 @@ Require an actual `HTTP/2 200` or `HTTP/1.1 200` and `{"status":"ok","contractVe
 
 Do **not** treat the live service as a completed SPIKE until the public HTTP gate is proved and recorded. Keep Issue #1 open and PR #3 Draft pending final acceptance decision. The isolated stage is an actual persistent resource; track its later teardown/retention separately from success verification to avoid unexpected usage.
 
+## Final external public HTTP proof (2026-10-13) — AC-07 PASS
+
+Windows PowerShell, **outside the Docker container and Prisma Cloud**, executed the real public HTTPS request to the `publicApi` service:
+
+```powershell
+curl.exe -i --max-time 20 "https://xleysf70okhj533gk5sbm6qp.fra.prisma.build/health"
+$LASTEXITCODE
+```
+
+Exact result supplied by the user:
+
+```http
+HTTP/1.1 200 OK
+Content-Length: 45
+Content-Type: application/json
+Date: Tue, 13 Oct 2026 10:15:25 GMT
+Prisma-Request-Id: 01M4TC51817WF31PGNDXRV0BNK
+X-Request-Id: 01M4TC51817WF31PGNDXRV0BNK
+
+{"status":"ok","contractVersion":"spike-001"}
+```
+
+The PowerShell `$LASTEXITCODE` value was **`0`**. This proves external HTTP reachability (status 200), JSON response, and exact shared-contract version **on the real deployed Compute stage**. **AC-07 PASS**.
+
+**Final SPIKE-001 technical verdict: PASS — AC-01 through AC-08 substantiated** by committed configuration, user's Docker/Prisma CLI commands and HTTP output. AC-08 captures versions, stage/region, real public URL, command outputs, and important warnings without credentials. This pass is **technical feasibility**, not a security review or production-readiness guarantee. The external URL was verified by the user, not independently re-probed by the assistant.
+
+**Warnings and follow-up controls (non-blocking for SPIKE-001):**
+- Prisma Cloud reported no deploy commit/branch metadata: `/workspace has no commit and branch to report it under`. This is a **provenance/reporting limitation**, not a deployment or HTTP failure. Do not claim that Prisma Console captured Git revision metadata.
+- The tested target is an isolated `spike-001` stage in the workspace used by the signed-in user, with `prismaCloud({ region: "eu-central-1" })` in project configuration. **Production was not targeted.**
+- `alchemy` and `prisma skills sync` update notices did not prevent deploy. Updating those tools is outside B0 scope.
+- The deployed stage remains a **real potentially metered cloud resource**. Decide whether to retain it temporarily for review or explicitly approve a documented stage teardown later; do not delete automatically.
+- The newly committed `Dockerfile.dev` Git installation and Docker image rebuild have not been independently retested as a brand-new image; the running authenticated container was patched with Git during the spike. This nuance does not invalidate the observed remote deployment and external HTTP proof.
+- B0 PR #3 remains **Draft until final review and explicit merge decision**; avoid starting the Product milestone automatically.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -607,11 +641,11 @@ Do **not** treat the live service as a completed SPIKE until the public HTTP gat
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
 | AC-06 successful remote deployment | PASS (user-run Prisma CLI) | Prisma Cloud Personal workspace, stage spike-001; Stack deployed 5/5, 4 resources created and 1 report action, publicApi endpoint allocated; deploy finished in 22.0s |
-| AC-07 public /health HTTP 200 | PENDING PUBLIC PROBE | Deployment URL printed by Prisma CLI: https://xleysf70okhj533gk5sbm6qp.fra.prisma.build/health; status/body not yet independently verified |
-| AC-08 evidence | PARTIAL / PUBLIC HTTP PENDING | Local passes, pinned versions, forced build and stage deploy evidence recorded. Missing public HTTP status/body, and final warning assessment; provenance not recorded in Prisma Cloud |
+| AC-07 public /health HTTP 200 | PASS (external Windows PowerShell) | curl.exe -i public /health: HTTP/1.1 200 OK, application/json, expected contractVersion spike-001; $LASTEXITCODE=0; Date 2026-10-13 10:15:25 GMT |
+| AC-08 evidence | PASS (with non-blocking provenance note) | Node 24/Bun 1.4.3/pnpm 11.28.5/Composer 0.29.1/Prisma 8.0.0-rc.22, frozen install, uncached build, local/remote CLI output, stage, public HTTP proof and warnings documented; Cloud deploy Git metadata missing |
 
 ## Stop conditions
 
 - Do not merge until clean install, lockfile, build and local tests are verified.
-- Do not close Issue #1 or promote Product domain before remote HTTP 200 is observed.
+- Remote HTTP 200 has been observed; keep Issue #1 open until the final PR review/merge acceptance decision. Do not auto-promote the Product milestone.
 - If a Composer version mismatch occurs, document it and make the **smallest** build/configuration fix. Do not add frameworks or platform adapters.
