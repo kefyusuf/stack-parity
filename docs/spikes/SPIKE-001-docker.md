@@ -86,6 +86,34 @@ The HTTP service is available as long as `docker compose up` has its `dev` conta
 - The initial install must reach the npm registry. Do not run `docker compose down -v` merely to retry: it erases the named dependency volumes and forces a fresh install.
 - If the old bind-mounted `.pnpm-store` exists on the host, it can be removed **only after** verifying it contains no user data and is untracked. Do not delete node_modules volumes as the first response.
 
+## Prisma Compute staging requires Git in the dev image
+
+The Prisma CLI invokes `git check-ref-format` to validate `prisma deploy module.ts --stage spike-001`. The base `node:24-bookworm-slim` image does not provide Git, and the host OS Git is not available inside Docker. `Dockerfile.dev` now installs Git with Debian `apt-get` (development toolchain only; no production Docker changes).
+
+A `--stage` deployment attempted in the original image stopped at `load config and app` with `DEPLOY.STAGE_UNVALIDATABLE`, `spawnSync git ENOENT`. It did **not** prove any cloud deployment.
+
+If the user already signed in to Prisma Cloud inside an active one-off Docker shell, **do not discard that container merely to pick up the new image**. Instead, while it is still running, use a separate PowerShell window:
+
+```powershell
+docker ps --filter "name=stack-parity-cloud-check"
+docker exec --user root stack-parity-cloud-check sh -lc "apt-get update && apt-get install -y --no-install-recommends git && git --version"
+```
+
+Then in the original authenticated shell:
+
+```sh
+git check-ref-format --branch spike-001
+```
+
+This ephemeral fix preserves that shell's Prisma login. Rebuilding the persistent image is a **later** step after the login session is no longer required:
+
+```powershell
+git pull --ff-only
+docker compose build dev
+```
+
+Keep production out of scope: only use an explicitly authorized `--stage spike-001` in the chosen workspace; unqualified deploy goes to production. Capture the stage/public URL HTTP evidence without printing credentials.
+
 ## Stop and cleanup
 
 ```powershell
