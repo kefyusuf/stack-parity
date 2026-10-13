@@ -63,6 +63,15 @@ Only after B1-D approval, in a separate scoped issue/PR and with one incremental
 
 No write endpoints or full CRUD, Customer/Order, search/filter/sort/pagination, pricing logic, storefront/admin/marketing apps, NestJS, auth, SDK codegen, generic DDD/repository abstractions, multiple databases or services, alternative providers, queues, Redis, advanced CI/CD or production deployment.
 
+## Preliminary version-matched source review (2026-10-13)
+
+This is **static source/documentation evidence, not a tested database integration**:
+
+- [Current official Composer database guide](https://www.prisma.io/docs/composer/databases) documents two distinct paths: `rawPostgres()` (caller manages a SQL client/migrations) and `postgres()` (Prisma ORM data contract, typed client and managed migrations). This project's original [bootstrap brief](../bootstrap-brief-v0.1.md) **plans Prisma Postgres + ORM**, so switching to a raw-client design requires an explicit design decision, not an incidental shortcut.
+- The upstream [Composer v0.29.1 ORM example](https://github.com/prisma/composer/tree/v0.29.1/examples/orm-demo) actually exists at the **same Composer tag** pinned in StackParity. It demonstrates a single Compute service plus one typed Postgres resource: [module wiring](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/module.ts), [service dependency](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/service.ts), [data contract](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/contract.ts), [CLI/ORM configuration](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/prisma.config.ts) and [runtime read](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/server.ts).
+- **Compatibility gap remains:** the tagged example uses `@prisma/orm-postgres@8.0.0-rc.17`, whereas this project's committed `prisma` CLI is `8.0.0-rc.22`. Do not copy dependency versions or assume that the generated ORM contract and migration workflow run correctly until a minimal **local** pinned-version validation succeeds.
+- Local `prisma dev module.ts` can provision a local Postgres under the current [Composer guide](https://www.prisma.io/docs/composer/databases#local-databases), but StackParity has **not** executed that DB gate. Do not mark D-B1-01 resolved or provision a cloud database from these references alone.
+
 ## Decisions still open
 
 - **D-B1-01:** Pin the concrete version-compatible Prisma Postgres provisioning and ORM/client path based on official docs and a minimal reproducible check.
