@@ -631,6 +631,16 @@ The PowerShell `$LASTEXITCODE` value was **`0`**. This proves external HTTP reac
 - The newly committed `Dockerfile.dev` Git installation and Docker image rebuild have not been independently retested as a brand-new image; the running authenticated container was patched with Git during the spike. This nuance does not invalidate the observed remote deployment and external HTTP proof.
 - B0 PR #3 remains **Draft until final review and explicit merge decision**; avoid starting the Product milestone automatically.
 
+## Final PR scope/safety review (2026-10-13)
+
+Reviewed PR #3 code/config diff (24 files) for the single `@stack-parity/contracts` → Hono `publicApi` → Prisma Compute boundary. No DB/ORM migration, Product domain, extra API service, frontend framework, CI deployment automation or production Docker image is introduced. The `module.ts` graph provisions one service; the endpoint imports through the workspace package; the root `prisma.config.ts` selects region `eu-central-1`. User-run end-to-end public `/health` was HTTP 200 as recorded above.
+
+**Merge-safety fix identified:** The original `package.json` script `"compute:deploy": "prisma deploy module.ts"` would have targeted **production** if invoked without additional arguments. This contradicted the deliberate isolated-stage boundary. The script was changed to `"compute:deploy": "prisma deploy module.ts --stage spike-001"`. The manifest is valid JSON; this script-only change does not affect `pnpm-lock.yaml` dependency resolution or the previously validated deployed application. The actual cloud proof remains from the user-issued explicit `pnpm exec prisma deploy module.ts --stage spike-001` command; **do not claim this revised script was separately executed**.
+
+**Residual verification worth completing before merge:** The final `Dockerfile.dev` now installs Git, but the user only patched Git in the previously running authenticated container before the successful staged deploy. A fresh `docker compose build dev` and `docker compose run --rm dev git --version` would directly validate the committed Dockerfile change. This is not a reason to re-deploy or add CI infrastructure. The `/workspace` Git SHA/branch metadata warning remains documented, non-blocking for this single feasibility spike.
+
+**Repository status at review:** GitHub reported PR mergeable, no submitted PR reviews or open inline review threads, and CodeRabbit status success; no GitHub Actions PR workflow run for reviewed head. These metadata results are not an independent CI execution or security audit. Keep PR #3 Draft pending requested fresh-image smoke and explicit merge approval. Preserve the live isolated `spike-001` stage until its retention/teardown is separately approved.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
