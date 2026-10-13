@@ -1,0 +1,3 @@
+**
+!Dockerfile.dev
+# No workspace content is needed to construct the development toolchain.

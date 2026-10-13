@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.turbo/
+.pnpm-store/
+.env
+.env.*
+!.env.example
+.npmrc
+.prisma/
+.prisma-composer/
+.alchemy/
+.DS_Store
