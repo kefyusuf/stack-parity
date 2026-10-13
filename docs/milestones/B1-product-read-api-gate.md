@@ -116,6 +116,22 @@ Both help commands again emitted `Prisma agent skills are out of date (installed
 
 Do not execute `contract emit`, `migration plan`, `db migrate` or `prisma dev` in the existing StackParity workspace as a shortcut. These can generate artifacts, create state or apply schema changes; the isolated probe boundary remains mandatory.
 
+### Phase A Git checkout evidence — user-executed (2026-10-13)
+
+Windows PowerShell in \`E:\projects\stack-parity\` returned:
+
+| Read-only command | Observed outcome |
+| --- | --- |
+| \`git status --short\` | Empty output — clean working tree |
+| \`git branch --show-current\` | \`spike/compute-monorepo-foundation\` |
+| \`git rev-parse HEAD\` | \`6eeb2729a8045186a0b82b5eec7047bf1c6df2a2\` |
+
+Confirmed separately from GitHub: this SHA is the head of **already squash-merged PR #3**; current remote \`main\` is \`eab6b2a85d46548fa3df3403c82c333d336e3bc6\`. A clean, non-main checkout is **not** proof that the local branch includes B0's squash-merge commit or B1 planning work.
+
+**Isolation decision:** leave the original checkout, its checked-out branch, Git metadata, Docker services/volumes and files untouched. Use a sibling directory **only after verifying that the target path does not already exist**. A new single-branch clone of remote \`main\` is preferred over a linked Git worktree because it avoids writing worktree metadata to the original checkout's \`.git\` directory. No probe command is authorized against the original checkout.
+
+**Next non-destructive preparation:** test whether \`E:\projects\stack-parity-b1-probe\` exists; if absent, clone remote \`main\` into that directory. Verify the clone's HEAD equals the reviewed remote \`main\` SHA and its working tree is clean. **Stop before** dependency install, schema edits, Composer emulator launch or any Docker/Prisma provisioning. Merely cloning is not evidence of an isolated emulator or DB; unique project/module and owned-resource configuration must be reviewed first.
+
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
 1. Prepare **one separate scratch checkout**, using a unique probe module/app name so the shared, persistent Prisma local emulators do not collide with `stack-parity` or other projects. Pin Composer to `0.29.1` and CLI to `8.0.0-rc.22`; select the ORM package from the upstream version-matched example and record its exact resolved peer tree. No dependency change to StackParity.
