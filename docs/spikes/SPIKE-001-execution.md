@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: LOCAL ACCEPTANCE GATES PASS (user-run Docker); remote Prisma Compute deployment and public HTTP 200 remain pending**
+**Status: LOCAL PASS + REMOTE STAGE DEPLOY PASS; public /health HTTP 200 verification and final evidence pending**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 
@@ -550,6 +550,53 @@ X load config and app (3ms)
 
 With Git verified, rerun only the previously attempted and user-authorized isolated stage command `pnpm exec prisma deploy module.ts --stage spike-001`, **never omit `--stage`**, and capture results. Public `GET /health` HTTP 200 remains mandatory before SPIKE-001 can be marked PASS.
 
+## First successful remote Prisma Compute deployment (user log, 2026-10-13)
+
+Following the Docker Git prerequisite fix, the user ran:
+
+```sh
+pnpm exec prisma deploy module.ts --stage spike-001
+```
+
+Authenticated Prisma Cloud workspace: `Personal workspace`. Root Composer config selects `prismaCloud({ region: "eu-central-1" })`. The `--stage spike-001` option explicitly selects a **non-production** environment.
+
+The user supplied CLI evidence:
+
+```text
+✓ load config and app
+✓ assemble services / publicApi
+✓ connect to project and branch
+✓ check environment variables
+✓ Plan ready (7.2s)
+stack-parity
+└─ publicApi   compute-service
+   https://xleysf70okhj533gk5sbm6qp.fra.prisma.build
+Plan · 4 created · 1 ran
+✓ COMPOSER_PUBLICAPI_ORIGIN-var created
+✓ COMPOSER_PUBLICAPI_PORT-var created
+✓ publicApi-deploy created
+✓ publicApi-svc created
+✓ composer-deployment-report ran
+Stack deployed (5/5)
+publicApi: https://xleysf70okhj533gk5sbm6qp.fra.prisma.build
+✓ Deployed stack-parity to spike-001 in 22.0s.
+```
+
+**AC-06 PASS:** the CLI completed a **real remote Prisma Compute stage deployment**, with a public endpoint assigned. The deployed service base URL is `https://xleysf70okhj533gk5sbm6qp.fra.prisma.build`.
+
+**AC-07 still PENDING:** no HTTP status/response body evidence was supplied by the user for the public endpoint. An independent HTTP fetch from the assistant execution environment could not resolve the external DNS; this does **not** constitute HTTP failure by the deployed service. Request from the user's Windows PowerShell terminal:
+
+```powershell
+curl.exe -i --max-time 20 "https://xleysf70okhj533gk5sbm6qp.fra.prisma.build/health"
+$LASTEXITCODE
+```
+
+Require an actual `HTTP/2 200` or `HTTP/1.1 200` and `{"status":"ok","contractVersion":"spike-001"}` with exit code `0`.
+
+**Non-blocking warnings observed:** the Composer CLI printed `Not recording this deploy in Prisma Cloud: /workspace has no commit and branch to report it under. Deploy from a git checkout to see it in the Console.` This is a deployment **commit/branch provenance metadata gap**, not a rollback or deployment failure. The Docker container's `/workspace` lacked usable Git checkout metadata for reporting; address only if justified after the public-HTTP gate, without changing the scope or fabricating recorded provenance. Alchemy update and Prisma skills advisories are informational.
+
+Do **not** treat the live service as a completed SPIKE until the public HTTP gate is proved and recorded. Keep Issue #1 open and PR #3 Draft pending final acceptance decision. The isolated stage is an actual persistent resource; track its later teardown/retention separately from success verification to avoid unexpected usage.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -559,9 +606,9 @@ With Git verified, rerun only the previously attempted and user-authorized isola
 | AC-03 typecheck + build | PASS (user-run, uncached build) | Typecheck exit 0; Bun test 1 pass/0 fail; Turbo --force: 1 successful, 0 cached, bundled 161 modules |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
-| AC-06 successful remote deployment | ATTEMPTED / BLOCKED AT CLI PREFLIGHT | Authorized isolated stage deploy stopped at load config/app with DEPLOY.STAGE_UNVALIDATABLE because Git missing in dev container; no cloud deployment success evidence |
-| AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
-| AC-08 evidence | PARTIAL | Missing run logs and versions |
+| AC-06 successful remote deployment | PASS (user-run Prisma CLI) | Prisma Cloud Personal workspace, stage spike-001; Stack deployed 5/5, 4 resources created and 1 report action, publicApi endpoint allocated; deploy finished in 22.0s |
+| AC-07 public /health HTTP 200 | PENDING PUBLIC PROBE | Deployment URL printed by Prisma CLI: https://xleysf70okhj533gk5sbm6qp.fra.prisma.build/health; status/body not yet independently verified |
+| AC-08 evidence | PARTIAL / PUBLIC HTTP PENDING | Local passes, pinned versions, forced build and stage deploy evidence recorded. Missing public HTTP status/body, and final warning assessment; provenance not recorded in Prisma Cloud |
 
 ## Stop conditions
 
