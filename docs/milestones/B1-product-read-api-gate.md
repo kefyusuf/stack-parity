@@ -69,7 +69,7 @@ This is **static source/documentation evidence, not a tested database integratio
 
 - [Current official Composer database guide](https://www.prisma.io/docs/composer/databases) documents two distinct paths: `rawPostgres()` (caller manages a SQL client/migrations) and `postgres()` (Prisma ORM data contract, typed client and managed migrations). This project's original [bootstrap brief](../bootstrap-brief-v0.1.md) **plans Prisma Postgres + ORM**, so switching to a raw-client design requires an explicit design decision, not an incidental shortcut.
 - The upstream [Composer v0.29.1 ORM example](https://github.com/prisma/composer/tree/v0.29.1/examples/orm-demo) actually exists at the **same Composer tag** pinned in StackParity. It demonstrates a single Compute service plus one typed Postgres resource: [module wiring](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/module.ts), [service dependency](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/service.ts), [data contract](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/contract.ts), [CLI/ORM configuration](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/prisma.config.ts) and [runtime read](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/src/server.ts).
-- **Version-number interpretation corrected:** the tagged Composer example uses `@prisma/orm-postgres@8.0.0-rc.17` alongside the Prisma CLI release line that includes `8.0.0-rc.22`. [Prisma ORM from-scratch documentation](https://www.prisma.io/docs/prisma-orm/from-scratch#prerequisites) explicitly says different CLI and ORM package version numbers are **normal** and even gives this pair as an example. The number difference is **not proof of incompatibility**; dependency resolution, contract emission, migration and real database runtime still require an executed **local** pinned-version check. Do not opportunistically upgrade packages.
+- **Version provenance (review correction):** the tagged [Composer v0.29.1 workspace catalog](https://github.com/prisma/composer/blob/v0.29.1/pnpm-workspace.yaml) pins its *own* `prisma` CLI to `8.0.0-rc.19`; its [ORM demo manifest](https://github.com/prisma/composer/blob/v0.29.1/examples/orm-demo/package.json) uses `prisma: catalog:` and `@prisma/orm-postgres@8.0.0-rc.17`. **Separately**, the [Prisma ORM from-scratch guide](https://www.prisma.io/docs/prisma-orm/from-scratch#prerequisites) gives the `prisma@8.0.0-rc.22` + `@prisma/orm-postgres@8.0.0-rc.17` pair and says CLI and ORM version numbers need not match. StackParity currently runs CLI `8.0.0-rc.22`; unlike upstream Composer's own example, this precise Composer 0.29.1/CLI rc.22/ORM rc.17 combination is **not yet proven by a database-backed runtime test**. Different version numbers alone do not prove failure; do not upgrade opportunistically.
 - Local `prisma dev module.ts` can provision a local Postgres under the current [Composer guide](https://www.prisma.io/docs/composer/databases#local-databases), but StackParity has **not** executed that DB gate. Do not mark D-B1-01 resolved or provision a cloud database from these references alone.
 - **Local safety constraint:** [Composer local-development documentation](https://www.prisma.io/docs/composer/local-development#whats-local-vs-whats-real) reports that `prisma dev module.ts --fresh` currently **fails when the app has a database** and can strand the local emulator. Do not use `--fresh` as B1's test reset/cleanup method; use an isolated, explicitly disposable test DB and a reviewed cleanup procedure. The same docs say native Windows `dev` is unsupported; use the already-established Linux Docker toolchain (or validated Linux environment), not new cross-platform tooling.
 - **Existing Hono wiring check:** [standalone runner](../../services/public-api/src/local.ts) and [Composer entrypoint](../../services/public-api/src/server.ts) both import [the current app](../../services/public-api/src/app.ts), but only the latter has access to Composer service bindings. Preserve the B0 standalone `/health` seam while adding the single Product reader.
@@ -82,8 +82,28 @@ This is a **throwaway technical probe**, not a Product implementation, runtime d
 ### Phase A — read-only repository and toolchain checks
 
 - Confirm `main`, root `package.json`, lockfile and existing `module.ts` match the B0 baseline; keep PR #5 docs-only.
-- In the existing Docker **dev toolchain**, run `pnpm exec prisma --version` and inspect current `pnpm exec prisma contract --help` / `pnpm exec prisma migration --help` before selecting subcommands. No install, lockfile rewrite or resource operation is authorized by this phase.
+- In the existing Docker **dev toolchain**, run `pnpm exec prisma --version` and inspect current `pnpm exec prisma contract --help` / `pnpm exec prisma migration --help` before selecting subcommands. **User-provided help outputs were observed on 2026-10-13, but `$LASTEXITCODE` values have not been captured** (see below). No install, lockfile rewrite or resource operation is authorized by this phase.
 - Review the immutable [Composer v0.29.1 ORM example](https://github.com/prisma/composer/tree/v0.29.1/examples/orm-demo) as source. Its `workspace:` and `catalog:` package references belong to Prisma's own monorepo: they cannot simply be copied into an independent StackParity installation. Do not claim a standalone install from the example without explicit dependency resolution.
+
+### Phase A observed evidence (2026-10-13, Windows PowerShell + existing Docker dev)
+
+Source: user-pasted, unedited terminal excerpts from `E:\\projects\\stack-parity`. This is **user-executed evidence**, not an assistant-initiated Docker run. Container creation messages appeared for each one-off command; the shell returned to the prompt. Explicit `$LASTEXITCODE` values were not supplied, so do not invent exit-code zero.
+
+| Command (run using `docker compose run --rm dev ...`) | Observed result |
+| --- | --- |
+| `pnpm exec prisma --version` | `8.0.0-rc.22` |
+| `pnpm exec prisma contract --help` | Subcommands `emit`, `infer`, `format`, `print` listed |
+| `pnpm exec prisma migration --help` | `check`, `graph`, `list`, `log`, `new`, `plan`, `show`, `status`, `ref` listed; help says **apply with `db migrate`** |
+
+Both help outputs reported: `Prisma agent skills are out of date (installed @prisma/orm-postgres 8.0.0-rc.17, synced none). Run: prisma skills sync`. This reports a detected ORM version and missing skill synchronization; it does **not** independently establish a successful direct ORM install in StackParity's root manifest, a functional DB connection, or a failing CLI command. Skill sync is not part of this gate.
+
+**Evidence classification: `CLI_HELP_OBSERVED` (partial Phase A).** CLI surface and version are visible; explicit exit codes, verified environment provenance and all Phase B integration evidence remain open. No migrations were planned/applied, no contract artifacts generated, no database provisioned, and no cloud deploy executed as part of these commands.
+
+**Next read-only checks only**, with exit codes individually captured:
+- `pnpm exec prisma contract emit --help`
+- `pnpm exec prisma db migrate --help`
+
+Do not execute `contract emit`, `migration plan`, `db migrate` or `prisma dev` in the existing StackParity workspace as a shortcut. These can generate artifacts, create state or apply schema changes; the isolated probe boundary remains mandatory.
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
@@ -93,11 +113,12 @@ This is a **throwaway technical probe**, not a Product implementation, runtime d
 4. Query a known row through the **real** ORM client, edit the row by a separate, local-only database connection, and verify the second read reflects the changed value. Record both observations and the missing/unavailable DB negative result; mocked reads or the compiler alone do not establish persistence.
 5. Stop the probe. Record any remaining local emulator-owned resources. **Never** delete or reset global emulator state, named volumes or other apps' resources automatically; document safe, ownership-checked cleanup separately before any destructive step.
 
-The above is an **acceptance protocol**, not a claim of execution. The current assistant environment has Node but no Bun/pnpm/Docker/Postgres and cannot reach the npm registry; as of this review **Phase A/B have not been executed**. A successful probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
+The above is an **acceptance protocol**, not a claim of Phase B execution. Phase A has user-provided CLI version/help output (recorded above) but has not reached full `LOCAL_TOOLCHAIN_PASS`. The assistant has not run Docker, migrations, a database or external deployment. A successful probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
 
 ### Explicit outcome labels
 
-- `STATIC_SOURCE_REVIEWED`: versioned examples and supported commands located; **current state**.
+- `STATIC_SOURCE_REVIEWED`: versioned upstream examples and supported commands located; completed as a static-source step.
+- `CLI_HELP_OBSERVED`: user-provided CLI version/help text inspected without captured exit codes; **current partial Phase A state**.
 - `LOCAL_TOOLCHAIN_PASS`: exact read-only local commands and versions captured; not yet achieved.
 - `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
