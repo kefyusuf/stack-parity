@@ -474,6 +474,23 @@ The user supplied Windows PowerShell output after the Composer-managed HTTP 200:
 
 **No remote deploy was executed in this session.** Until a public deployment URL returns HTTP 200 and matching JSON, retain PR Draft / Issue #1 open and do not advance beyond B0 SPIKE-001.
 
+## Prisma Cloud interactive login — authenticated CLI session (user screenshot, 2026-10-13)
+
+The user resolved the earlier Docker-to-host browser callback failure and supplied a Prisma CLI screenshot with:
+
+```text
+Sign in via your browser
+Starting an authenticated CLI session.
+status: signed in
+workspace: Personal workspace
+```
+
+**Result:** interactive login completed and the Prisma CLI reported a signed-in session for `Personal workspace`. The screenshot also displayed a user email, deliberately **omitted from this repository**. The later `Prisma agent skills are out of date` advisory is informational and does not establish an authentication or deployment failure.
+
+**Still required before any cloud write:** run `pnpm exec prisma auth whoami` **in the same running authenticated Docker shell** to verify which workspace is active; verify the local `services/public-api/dist/server.mjs` exists and matches the built application. The user must explicitly authorize a potentially billable, isolated `spike-001` stage in region `eu-central-1`. Do **not** run an unqualified `prisma deploy module.ts`: per upstream Composer v0.29.1 docs it targets production. Do not store tokens, verification links, authorization codes or credential values in git or chat.
+
+**Current remote status:** authentication login succeeded; project deployment **not executed** and no public URL or HTTP 200 yet. Keep PR #3 Draft and Issue #1 open.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -483,7 +500,7 @@ The user supplied Windows PowerShell output after the Composer-managed HTTP 200:
 | AC-03 typecheck + build | PASS (user-run, build cached) | Typecheck exit 0; Bun test 1 pass/0 fail exit 0; Turbo build 1 successful with 1 cache hit exit 0 |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
-| AC-06 successful remote deployment | NOT RUN | Requires interactive Prisma auth |
+| AC-06 successful remote deployment | NOT RUN / AUTH LOGIN SUCCEEDED | Screenshot shows successful Prisma CLI session, Personal workspace; whoami and explicit isolated-stage deployment approval still pending |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
 
