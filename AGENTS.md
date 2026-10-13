@@ -6,11 +6,11 @@
 
 Build a production-shaped, open-source reference application demonstrating how independent TypeScript frameworks coexist in one product.
 
-## Active milestone: B0 / SPIKE-001
+## Current gate: B1 definition — planning only
 
-Until SPIKE-001 is closed with evidence, the only active technical question is whether a pnpm + Turborepo workspace, shared contracts package, and Hono service can be built and deployed to Prisma Compute.
+B0 / SPIKE-001 is closed with evidence: PR #3 merged and Issue #1 closed on 2026-10-13. The active task is Issue #4, a documentation/review gate for the first Product read-only API slice. **Do not implement Product, provision a database, deploy another cloud stage, or promote HOLD technologies until B1 is reviewed and explicitly authorized.**
 
-Read `docs/bootstrap-brief-v0.1.md` and `docs/spikes/SPIKE-001.md` before making changes.
+Read `docs/bootstrap-brief-v0.1.md`, `docs/spikes/SPIKE-001.md`, and `docs/milestones/B1-product-read-api-gate.md` before making changes.
 
 ## Non-negotiable boundaries
 
