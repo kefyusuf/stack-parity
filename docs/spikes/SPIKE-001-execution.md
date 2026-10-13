@@ -491,6 +491,31 @@ workspace: Personal workspace
 
 **Current remote status:** authentication login succeeded; project deployment **not executed** and no public URL or HTTP 200 yet. Keep PR #3 Draft and Issue #1 open.
 
+## Cloud deploy preflight — identity and artifact verified (user screenshot, 2026-10-13)
+
+The user ran both commands from the authenticated Prisma CLI container shell:
+
+```sh
+pnpm exec prisma auth whoami
+test -s services/public-api/dist/server.mjs && echo "build artifact: OK"
+```
+
+Observed result (private account email intentionally excluded from evidence):
+
+```text
+status: signed in
+workspace: Personal workspace
+build artifact: OK
+```
+
+**Preflight PASS:** an authenticated CLI session is active in the Docker shell for the `Personal workspace`, and the Hono build artifact file is present and nonempty. The file presence check does **not** prove freshness of the bundled output; rerun `pnpm exec turbo run build --force` inside the same shell before any remote deployment to avoid relying solely on a cached build.
+
+**Cost information (official Prisma Compute pricing, checked 2026-10-13):** Free has no usage billing with included monthly requests, memory, CPU and bandwidth; paid plans meter compute usage. Deployments and stage creation are not billed on their own. The screenshot does not identify the workspace's active plan, quotas, or current utilization, so actual cost/eligibility is not confirmed. See https://www.prisma.io/pricing and https://www.prisma.io/docs/compute/pricing.
+
+**Human approval required before cloud write:** confirm isolated stage `spike-001` in configured region `eu-central-1`, within the authenticated `Personal workspace`. Exact intended command after approval and build: `pnpm exec prisma deploy module.ts --stage spike-001` (unqualified `prisma deploy module.ts` would target production). Preserve the authenticated shell until deployment. Do not include credentials, browser verification links or tokens in logs or committed docs.
+
+**AC-06 remains PENDING:** no real cloud deploy was executed; no public service URL or HTTP 200 evidence yet.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
@@ -500,7 +525,7 @@ workspace: Personal workspace
 | AC-03 typecheck + build | PASS (user-run, build cached) | Typecheck exit 0; Bun test 1 pass/0 fail exit 0; Turbo build 1 successful with 1 cache hit exit 0 |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
-| AC-06 successful remote deployment | NOT RUN / AUTH LOGIN SUCCEEDED | Screenshot shows successful Prisma CLI session, Personal workspace; whoami and explicit isolated-stage deployment approval still pending |
+| AC-06 successful remote deployment | NOT RUN / AUTH AND ARTIFACT PREFLIGHT PASS | whoami signed in to Personal workspace; dist/server.mjs is nonempty; isolated stage deployment approval and public deploy evidence pending |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
 
