@@ -78,4 +78,4 @@ No database, model migrations, Product/Customer/Order implementation, frontend a
 
 ## Next only after PASS
 
-First Product vertical slice: contract → persistence → `GET /products` → test → deploy.
+The proposed first Product vertical slice is: contract → persistence → `GET /products` → tests → a separately approved isolated stage deployment. Its **definition/review gate**, not implementation, is tracked in [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4) and [B1 planning brief](../milestones/B1-product-read-api-gate.md). No cloud deploy or Product code is authorized merely because SPIKE-001 passed.
