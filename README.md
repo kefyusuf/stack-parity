@@ -4,7 +4,7 @@
 
 StackParity is an open-source, production-shaped reference project exploring how distinct TypeScript stacks can coexist within one product through stable contracts and independently verifiable deployment boundaries.
 
-> **Status: B0 / Bootstrap.** SPIKE-001 passed on an isolated Prisma Compute stage (2026-10-13); no production application has been deployed.
+> **Status: B0 complete; B1 definition/review only.** SPIKE-001 passed on an isolated Prisma Compute stage (2026-10-13), and PR #3 was merged. No production application or Product feature has been deployed.
 
 ## Current objective
 
