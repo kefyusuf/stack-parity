@@ -516,16 +516,50 @@ build artifact: OK
 
 **AC-06 remains PENDING:** no real cloud deploy was executed; no public service URL or HTTP 200 evidence yet.
 
+## Uncached build and staged deploy preflight failure (user CLI, 2026-10-13)
+
+The user ran the following in the authenticated Docker development shell (workspace: `Personal workspace`):
+
+```sh
+pnpm exec turbo run build --force
+pnpm exec prisma deploy module.ts --stage spike-001
+```
+
+The forced build **PASS** result is user-confirmed:
+
+```text
+@stack-parity/public-api:build: cache bypass, force executing
+@stack-parity/public-api:build: Bundled 161 modules in 55ms
+Tasks: 1 successful, 1 total
+Cached: 0 cached, 1 total
+```
+
+The **cloud deployment did not complete**. Prisma CLI stopped during preflight:
+
+```text
+Load config and app
+X load config and app (3ms)
+[DEPLOY.STAGE_UNVALIDATABLE] git is required to validate --stage "spike-001" (git check-ref-format): spawnSync git ENOENT.
+```
+
+**Confirmed cause:** `Dockerfile.dev` uses `node:24-bookworm-slim` and did not install `git`. Prisma validates stage names by launching the `git` executable, which is missing from the running Linux container; the Windows host Git is not available inside it. This is not a Hono, Bun build, Prisma credentials or stage-name syntax error. The run did not get past `load config and app`; there is no evidence of a created cloud deployment or public URL. The Prisma skills update notice is informational.
+
+**Narrow permanent correction:** install Git with `apt-get install -y --no-install-recommends git` in the development-only `Dockerfile.dev`. No project services, dependencies, workspace config, application code or deployment target changed. The new image is **not yet Docker-built or user-verified**.
+
+**Preserve authentication for immediate retry:** do **not** replace the authenticated one-off container mid-session. From a separate PowerShell window, inspect `docker ps --filter name=stack-parity-cloud-check`. If that named container still exists, use `docker exec --user root stack-parity-cloud-check sh -lc "apt-get update && apt-get install -y --no-install-recommends git && git --version"`, then in the **original authenticated shell** run `git check-ref-format --branch spike-001`. Root installation is ephemeral in that running container and avoids loss of the Prisma login. The permanent `Dockerfile.dev` change applies to **future containers after a deliberate `docker compose build dev`**, which should occur after the authenticated session is no longer needed. Neither install nor validation is a cloud write.
+
+With Git verified, rerun only the previously attempted and user-authorized isolated stage command `pnpm exec prisma deploy module.ts --stage spike-001`, **never omit `--stage`**, and capture results. Public `GET /health` HTTP 200 remains mandatory before SPIKE-001 can be marked PASS.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
 |---|---|---|
 | AC-01 clean install + committed lockfile | PASS (user-run + GitHub verified) | Frozen install exit 0; head 041b120 committed pnpm-lock.yaml importer Composer 0.29.1 and Cloud extension 0.29.1, matching manifest |
 | AC-02 workspace package import | USER-EXECUTED RUNTIME PASS | Composer-managed HTTP response contains shared workspace contractVersion spike-001; import is explicit in Hono source |
-| AC-03 typecheck + build | PASS (user-run, build cached) | Typecheck exit 0; Bun test 1 pass/0 fail exit 0; Turbo build 1 successful with 1 cache hit exit 0 |
+| AC-03 typecheck + build | PASS (user-run, uncached build) | Typecheck exit 0; Bun test 1 pass/0 fail; Turbo --force: 1 successful, 0 cached, bundled 161 modules |
 | AC-04 local /health | USER-EXECUTED PASS | In named Composer container: HTTP 200 and expected JSON, exit code 0; separate standalone Hono browser smoke also passed |
 | AC-05 Composer declaration | USER-EXECUTED LOCAL PASS | --fresh created 4/4, dev: ready and publicApi URL; same Composer container returned HTTP 200 and contract JSON |
-| AC-06 successful remote deployment | NOT RUN / AUTH AND ARTIFACT PREFLIGHT PASS | whoami signed in to Personal workspace; dist/server.mjs is nonempty; isolated stage deployment approval and public deploy evidence pending |
+| AC-06 successful remote deployment | ATTEMPTED / BLOCKED AT CLI PREFLIGHT | Authorized isolated stage deploy stopped at load config/app with DEPLOY.STAGE_UNVALIDATABLE because Git missing in dev container; no cloud deployment success evidence |
 | AC-07 public /health HTTP 200 | NOT RUN | Requires deployment URL |
 | AC-08 evidence | PARTIAL | Missing run logs and versions |
 
