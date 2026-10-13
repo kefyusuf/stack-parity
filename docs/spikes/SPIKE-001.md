@@ -53,7 +53,7 @@ The imported value must originate in `packages/contracts`, via the package expor
 5. Run locally with `prisma dev module.ts`; request `/health`.
 6. Verify credentials with `prisma auth whoami`. If necessary, the human operator runs interactive `prisma auth login`.
 7. Select/configure an officially supported Compute region; record why it was chosen.
-8. For this spike, deploy only to an explicitly approved isolated stage: `prisma deploy module.ts --stage spike-001` (unqualified deploy targets production); request the printed public service URL's `/health`.
+8. For this spike, deploy only to an explicitly approved isolated stage: `pnpm compute:deploy` runs `prisma deploy module.ts --stage spike-001` (unqualified `prisma deploy module.ts` targets production); request the printed public service URL's `/health`.
 9. Record evidence, assign PASS / BLOCKED / FAIL, and only then authorize the next milestone.
 
 Prisma Composer deployment consumes our build artifact: `deploy` is **not** a substitute for a successful build.
