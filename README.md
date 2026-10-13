@@ -8,11 +8,13 @@ StackParity is an open-source, production-shaped reference project exploring how
 
 ## Current objective
 
-Prove a single, narrow technical seam:
+The B0 feasibility seam has been proven:
 
 `pnpm workspace → shared contracts package → Hono service → Prisma Compute`
 
-This is **SPIKE-001**. That requirement passed: the public Compute stage returned HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}` from `GET /health`. See the [SPIKE-001 execution evidence](docs/spikes/SPIKE-001-execution.md).
+**SPIKE-001 passed**: the public Compute stage returned HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}` from `GET /health`. See the [SPIKE-001 execution evidence](docs/spikes/SPIKE-001-execution.md).
+
+**NEXT (planning only):** [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4) defines a [gated first Product read API slice](docs/milestones/B1-product-read-api-gate.md). No Product implementation, database provisioning, or new deployment is authorized by that plan.
 
 ## Intended reference application (not implemented)
 
