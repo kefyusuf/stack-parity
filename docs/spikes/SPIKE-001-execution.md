@@ -641,6 +641,21 @@ Reviewed PR #3 code/config diff (24 files) for the single `@stack-parity/contrac
 
 **Repository status at review:** GitHub reported PR mergeable, no submitted PR reviews or open inline review threads, and CodeRabbit status success; no GitHub Actions PR workflow run for reviewed head. These metadata results are not an independent CI execution or security audit. Keep PR #3 Draft pending requested fresh-image smoke and explicit merge approval. Preserve the live isolated `spike-001` stage until its retention/teardown is separately approved.
 
+## Final Docker development image smoke (user-reported, 2026-10-13)
+
+After the `Dockerfile.dev` Git-install correction, the user reported running the requested **new-image** smoke checks on the Windows Docker development environment:
+
+```powershell
+docker compose build dev
+$LASTEXITCODE  # 0
+docker compose run --rm dev git --version
+$LASTEXITCODE  # 0
+```
+
+Both commands were reported as successful, with exit code **0**. This closes the targeted gap between manually installing Git into the earlier authenticated container and verifying the **committed development image** can be built and runs `git` as a non-root user. The raw build logs and the exact Git version string were **not** supplied; do not invent them or equate this smoke check to a second remote deployment.
+
+**Merge checkpoint:** SPIKE-001 technical acceptance (AC-01 through AC-08) PASS; final Git-toolchain smoke PASS (user-reported). The `compute:deploy` package script is now explicitly stage-scoped to `spike-001`, avoiding implicit production targeting. PR #3 can proceed to an **explicit, user-approved** squash merge decision after checking current GitHub mergeability and policies; no merge or issue closure has yet occurred. The deployed `spike-001` resource remains live, and its retention/teardown is a separate decision.
+
 ## Acceptance evidence
 
 | Gate | Status | Evidence |
