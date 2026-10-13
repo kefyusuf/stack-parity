@@ -99,9 +99,20 @@ Both help outputs reported: `Prisma agent skills are out of date (installed @pri
 
 **Evidence classification: `CLI_HELP_OBSERVED` (partial Phase A).** CLI surface and version are visible; explicit exit codes, verified environment provenance and all Phase B integration evidence remain open. No migrations were planned/applied, no contract artifacts generated, no database provisioned, and no cloud deploy executed as part of these commands.
 
-**Next read-only checks only**, with exit codes individually captured:
-- `pnpm exec prisma contract emit --help`
-- `pnpm exec prisma db migrate --help`
+### Phase A targeted command checks — user-executed PASS (2026-10-13)
+
+From Windows PowerShell in the existing `E:\projects\stack-parity` checkout, both **read-only help commands** ran inside `docker compose run --rm dev` and the user captured `$LASTEXITCODE = 0` after each:
+
+| Command (under `pnpm exec prisma`) | Observed behavior | Exit code |
+| --- | --- | --- |
+| `contract emit --help` | Shows offline artifact emission of `contract.json` and `contract.d.ts`, with `--output-path` support. No emit was performed. | `0` |
+| `db migrate --help` | Shows migration application command; `--db <url>`, `--to`, `--advance-ref` and read-only `--show` preview. No migration was applied. | `0` |
+
+Both help commands again emitted `Prisma agent skills are out of date (installed @prisma/orm-postgres 8.0.0-rc.17, synced none)`. Because the help commands completed successfully and no integration was attempted, this remains a **non-blocking advisory** for Phase A; no skills sync is justified by this observation.
+
+**Outcome:** targeted help subgate `PASS 2/2`; overall Phase A is still **partial** because the earlier three commands have output but no recorded exit codes, and the disposable-probe environment has not been verified. This is **not** a successful `contract emit`, migration, Postgres connection or ORM runtime test.
+
+**Next gate:** inspect local working-tree status/branch and disposable-probe environment ownership **without modifying this repository**. Only after the probe isolation is verified, plan actual emission/migrations inside that separate probe.
 
 Do not execute `contract emit`, `migration plan`, `db migrate` or `prisma dev` in the existing StackParity workspace as a shortcut. These can generate artifacts, create state or apply schema changes; the isolated probe boundary remains mandatory.
 
@@ -118,7 +129,7 @@ The above is an **acceptance protocol**, not a claim of Phase B execution. Phase
 ### Explicit outcome labels
 
 - `STATIC_SOURCE_REVIEWED`: versioned upstream examples and supported commands located; completed as a static-source step.
-- `CLI_HELP_OBSERVED`: user-provided CLI version/help text inspected without captured exit codes; **current partial Phase A state**.
+- `CLI_HELP_OBSERVED`: initial version/top-level help text received without recorded exit codes; the additional two targeted help commands each exited `0` (2026-10-13). **Current partial Phase A state**.
 - `LOCAL_TOOLCHAIN_PASS`: exact read-only local commands and versions captured; not yet achieved.
 - `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
