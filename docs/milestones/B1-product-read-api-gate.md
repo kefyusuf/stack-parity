@@ -10,7 +10,9 @@
 Demonstrate **one database-backed, contract-typed read path** end to end:
 
 ```text
-Prisma Postgres -> Hono GET /products -> @stack-parity/contracts -> JSON consumer
+Prisma Postgres -> Hono GET /products -> HTTP JSON consumer
+                        |
+                        +-- imports @stack-parity/contracts (read shape)
 ```
 
 This is the first narrow business-domain slice of the existing single product, **not** a catalog platform. Keep the already verified `GET /health` unchanged. Reuse the one existing `services/public-api` deployable and `packages/contracts`; do not start a second service.
