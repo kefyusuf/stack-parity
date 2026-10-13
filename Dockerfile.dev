@@ -1,6 +1,12 @@
 # SPIKE-001 local Linux development toolchain; not a production image.
 FROM node:24-bookworm-slim
 
+# Prisma CLI uses `git check-ref-format` to validate remote --stage names.
+# Keep Git in the development toolchain; the Windows host's Git is not available here.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 # Keep the same pinned versions as package.json and Docker Compose.
 RUN npm install --global pnpm@11.28.5 bun@1.4.3 \
     && node --version \
