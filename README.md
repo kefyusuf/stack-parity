@@ -4,7 +4,7 @@
 
 StackParity is an open-source, production-shaped reference project exploring how distinct TypeScript stacks can coexist within one product through stable contracts and independently verifiable deployment boundaries.
 
-> **Status: B0 / Bootstrap.** No production application or live deployment exists yet.
+> **Status: B0 / Bootstrap.** SPIKE-001 passed on an isolated Prisma Compute stage (2026-10-13); no production application has been deployed.
 
 ## Current objective
 
@@ -12,7 +12,7 @@ Prove a single, narrow technical seam:
 
 `pnpm workspace → shared contracts package → Hono service → Prisma Compute`
 
-This is **SPIKE-001**. A successful deployment requires a live HTTP 200 response from `GET /health` showing a value imported from the shared package.
+This is **SPIKE-001**. That requirement passed: the public Compute stage returned HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}` from `GET /health`. See the [SPIKE-001 execution evidence](docs/spikes/SPIKE-001-execution.md).
 
 ## Intended reference application (not implemented)
 
@@ -28,13 +28,13 @@ Later milestones may add Astro (content), Next.js (storefront), Nuxt (merchant U
 
 Read the [B0 Bootstrap Brief](docs/bootstrap-brief-v0.1.md), [SPIKE-001 acceptance gate](docs/spikes/SPIKE-001.md), [ADR-0001](docs/adr/0001-project-thesis-and-boundaries.md), and [Issue #1](https://github.com/kefyusuf/stack-parity/issues/1).
 
-## Local SPIKE-001 development (draft)
+## Local SPIKE-001 development
 
 You can either install Node.js, Bun and pnpm natively or use Docker Desktop / Docker Engine with Compose v2.
 
 For the Docker path, see [SPIKE-001 Docker development](docs/spikes/SPIKE-001-docker.md). It provides local install, typechecking, tests, build and a standalone Hono HTTP smoke check without host language runtimes.
 
-**Note:** This does not prove Prisma Composer execution or a live Prisma Compute deployment. The complete evidence and stop conditions are recorded in [SPIKE-001 execution](docs/spikes/SPIKE-001-execution.md).
+**Boundary:** the standalone Docker smoke check alone is not proof of Prisma Composer or Compute behavior; those separate gates were also verified as documented in [SPIKE-001 execution](docs/spikes/SPIKE-001-execution.md). The deployed stage is for technical verification, not a production release.
 
 ## License
 
