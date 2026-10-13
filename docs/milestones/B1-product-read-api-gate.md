@@ -75,6 +75,34 @@ This is **static source/documentation evidence, not a tested database integratio
 - **Existing Hono wiring check:** [standalone runner](../../services/public-api/src/local.ts) and [Composer entrypoint](../../services/public-api/src/server.ts) both import [the current app](../../services/public-api/src/app.ts), but only the latter has access to Composer service bindings. Preserve the B0 standalone `/health` seam while adding the single Product reader.
 - **Stage caveat:** [Composer deploy docs](https://www.prisma.io/docs/composer/deploying#production-and-stages) say isolated stages own their databases. Planning must identify how B1 seed data reaches the chosen stage privately and repeatably **before** approving a paid deployment. Do not seed by adding an unauthenticated mutation endpoint or by overwriting `spike-001`.
 
+## B1-D local compatibility preflight — executable protocol, NOT RUN
+
+This is a **throwaway technical probe**, not a Product implementation, runtime dependency change, or production recipe. It must be conducted **outside the repository checkout**, in an explicitly identified, disposable Linux working directory. Stop and record `BLOCKED` if the environment or dependencies are unavailable. **Do not substitute** a cloud database or GitHub CI workflow.
+
+### Phase A — read-only repository and toolchain checks
+
+- Confirm `main`, root `package.json`, lockfile and existing `module.ts` match the B0 baseline; keep PR #5 docs-only.
+- In the existing Docker **dev toolchain**, run `pnpm exec prisma --version` and inspect current `pnpm exec prisma contract --help` / `pnpm exec prisma migration --help` before selecting subcommands. No install, lockfile rewrite or resource operation is authorized by this phase.
+- Review the immutable [Composer v0.29.1 ORM example](https://github.com/prisma/composer/tree/v0.29.1/examples/orm-demo) as source. Its `workspace:` and `catalog:` package references belong to Prisma's own monorepo: they cannot simply be copied into an independent StackParity installation. Do not claim a standalone install from the example without explicit dependency resolution.
+
+### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
+
+1. Prepare **one separate scratch checkout**, using a unique probe module/app name so the shared, persistent Prisma local emulators do not collide with `stack-parity` or other projects. Pin Composer to `0.29.1` and CLI to `8.0.0-rc.22`; select the ORM package from the upstream version-matched example and record its exact resolved peer tree. No dependency change to StackParity.
+2. Model one disposable, read-only test result table with a simple `id/name` shape and validate `contract emit`. Record generated `contract.json` and `contract.d.ts` without secrets. Verify and record the supported **migration** command and successful table provisioning in a database owned by the probe.
+3. Build and launch the **one-service, one-Postgres** Composer example locally, with `prisma dev module.ts` **without `--fresh`** and **without `deploy`**. The probe's HTTP listener must be loopback-only from the host's perspective. If the launcher does not actually provision DB and service, `BLOCKED`.
+4. Query a known row through the **real** ORM client, edit the row by a separate, local-only database connection, and verify the second read reflects the changed value. Record both observations and the missing/unavailable DB negative result; mocked reads or the compiler alone do not establish persistence.
+5. Stop the probe. Record any remaining local emulator-owned resources. **Never** delete or reset global emulator state, named volumes or other apps' resources automatically; document safe, ownership-checked cleanup separately before any destructive step.
+
+The above is an **acceptance protocol**, not a claim of execution. The current assistant environment has Node but no Bun/pnpm/Docker/Postgres and cannot reach the npm registry; as of this review **Phase A/B have not been executed**. A successful probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
+
+### Explicit outcome labels
+
+- `STATIC_SOURCE_REVIEWED`: versioned examples and supported commands located; **current state**.
+- `LOCAL_TOOLCHAIN_PASS`: exact read-only local commands and versions captured; not yet achieved.
+- `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
+- `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
+- `CLOUD_STAGE_PASSED`: **not eligible** under this B1-D planning gate.
+
 ## Decisions still open
 
 - **D-B1-01:** Confirm Composer's ORM-backed `postgres()` path with the pinned toolchain using a minimal **executed** local check; version numbers differing alone are not a blocker.
