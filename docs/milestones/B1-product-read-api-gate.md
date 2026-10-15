@@ -163,7 +163,16 @@ docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparit
 $LASTEXITCODE
 ```
 
-Expected services: `dev`; expected named volumes: `workspace_node_modules`, `contracts_node_modules`, `api_node_modules`, project-prefixed if materialized. Expected `ps --all`: no B1-probe containers. If unexpected existing resources appear, stop and inspect their ownership before any changes. **Do not use `up`, `run`, `build`, `down`, `down -v` or Prisma `dev` yet**.
+**User-executed Compose inspection (2026-10-16): PASS 3/3.** With `--project-directory E:\\projects\\stack-parity-b1-probe`, `-f ...\\compose.yaml`, and `-p stackparity-b1-probe`:
+- `config --services` showed only `dev`; exit code `0`.
+- `config --volumes` listed exactly `api_node_modules`, `workspace_node_modules`, `contracts_node_modules`; exit code `0`.
+- `ps --all` printed only the header, with no service container entries; exit code `0`.
+
+This checks **Compose config and project-specific container inventory** only. Logical `config --volumes` names are not evidence that no Docker volumes exist; no images, networks or data were created by these inspection commands. `module.ts` still uses the original Composer app name `stack-parity` and remains **unsafe for an isolated Prisma dev launch**. The existing host port binding `127.0.0.1:3000` must not be published by the probe.
+
+**Next permitted step (toolchain image build only, no runtime):** run `docker compose --project-directory $probe -f "$probe\\compose.yaml" -p stackparity-b1-probe build dev`, then capture `$LASTEXITCODE` and `ps --all` again. `Dockerfile.dev` only installs the existing Node/Bun/pnpm/Git toolchain, with no Product or Postgres workload. The unique Compose project name ensures a distinct generated image name from the original project. This build can write to Docker's shared build cache but must not start a service, publish port 3000, or touch the original project's named volumes. If it fails, stop and record the error; do not clean/prune Docker resources to fix it.
+
+**Still prohibited:** `up`, `run`, `down -v`, `prisma dev`, migrations or cloud provisioning. Frozen dependency installation in the clone is a separate gate after successful toolchain image build and explicit resource review.
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
