@@ -188,7 +188,13 @@ $LASTEXITCODE
 
 This step **does create a temporary one-off container**, a probe-owned Compose network and **three new named dependency volumes** (which persist after `--rm`); it may download packages from the registry and execute the permitted lifecycle scripts. `run` does not publish the service's configured host port unless `--service-ports` is specified; **do not add it**. The distinct `-p` protects the original project's named volumes. Require install exit code 0, no tracked file changes, and no lingering probe containers to accept this gate. Record ownership; never use `down -v`, pruning, broad script permissions, force upgrades or global cleanup on failure.
 
-**Still prohibited:** Compose `up`, `prisma dev`, schema/migration changes, `deploy`, Postgres provisioning, and any change to the original `E:\projects\stack-parity` checkout. Passing dependency install alone does not establish `LOCAL_DB_PASS`.
+**User-executed frozen dependency install: PASS (2026-10-16).** In the separate `E:\projects\stack-parity-b1-probe` checkout, the user executed `docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe run --rm --no-deps dev pnpm install --frozen-lockfile --reporter=append-only`. The terminal excerpt showed `Done in 33.7s using pnpm v11.28.5` and an explicitly captured `Install exit code: 0`. Subsequent `git -C $probe status --short` produced **no output**. The `ps --all` output showed a header without running/stopped probe containers; its own exit code was not separately captured.
+
+**Interpretation:** successful reproducible install at committed lockfile versions, with no tracked working-tree changes and no leftover one-off container visible. Three **probe-owned** named dependency volumes may remain intentionally; an empty container list is **expected** after `run --rm`. Do not delete these volumes or use `down -v`. This PASS does not imply a running Compose service, application tests, ORM contract emission, Postgres access or cloud validation.
+
+**Next isolated baseline checks (no DB or emulator):** from the same probe Compose project, run `pnpm typecheck` and `pnpm test` in one-off `run --rm --no-deps dev` containers, capture each exit code, and stop at the first failure. These exercise the existing B0 TypeScript/Hono smoke suite. Avoid `up` or `--service-ports`; don't attach to port 3000. Check `git status --short` and `ps --all` afterward. The uncached build can be checked in a separate gate.
+
+**Still prohibited:** Compose `up`, `prisma dev`, schema/migration changes, `deploy`, Postgres provisioning, and any change to the original `E:\projects\stack-parity` checkout. Passing dependency install or B0 baseline tests alone does not establish `LOCAL_DB_PASS`.
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
