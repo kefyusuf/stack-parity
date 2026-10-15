@@ -132,6 +132,39 @@ Confirmed separately from GitHub: this SHA is the head of **already squash-merge
 
 **Next non-destructive preparation:** test whether `E:\projects\stack-parity-b1-probe` exists; if absent, clone remote `main` into that directory. Verify the clone's HEAD equals the reviewed remote `main` SHA and its working tree is clean. **Stop before** dependency install, schema edits, Composer emulator launch or any Docker/Prisma provisioning. Merely cloning is not evidence of an isolated emulator or DB; unique project/module and owned-resource configuration must be reviewed first.
 
+### Phase A verified independent checkout (user-executed, 2026-10-16)
+
+The user created a separate `E:\projects\stack-parity-b1-probe` checkout. The following read-only outputs were inspected:
+
+| Check | Evidence |
+| --- | --- |
+| `git -C $probe status --short` | Empty output; clean worktree |
+| `git -C $probe branch --show-current` | `main` |
+| `git -C $probe rev-parse HEAD` | `eab6b2a85d46548fa3df3403c82c333d336e3bc6` |
+| `git -C $probe remote get-url origin` | `https://github.com/kefyusuf/stack-parity.git` |
+
+The remote `main` ref was independently read from GitHub and matched that exact SHA. **Independent checkout gate PASS.** No clone dependency install, Compose container launch, migration, Postgres or Prisma runtime test is implied by these Git commands.
+
+**Discovered isolation risks in `main`:**
+
+- `compose.yaml` exposes `127.0.0.1:3000:3000` and declares three named dependency volumes. A separate directory is not enough to safely launch a second HTTP process while the original could own port 3000. Use an explicit unique Compose project name and review volume names before **any** `up`/`run`/`build`.
+- `module.ts` still declares `module("stack-parity", ...)`, independently of the local directory. **Do not run `prisma dev` from the clone** before isolating the Composer module/app identity and determining any shared local-emulator state.
+- The B1 clone is baseline-only: it does not include the Draft PR #5 design-gate document. Keep PR #5 documentation in its own branch; do not cherry-pick draft planning commits into the probe just to test tools.
+
+**Next safe inspection, from any PowerShell working directory** (read-only; does not start containers):
+
+```powershell
+$probe = 'E:\projects\stack-parity-b1-probe'
+docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe config --services
+$LASTEXITCODE
+docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe config --volumes
+$LASTEXITCODE
+docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe ps --all
+$LASTEXITCODE
+```
+
+Expected services: `dev`; expected named volumes: `workspace_node_modules`, `contracts_node_modules`, `api_node_modules`, project-prefixed if materialized. Expected `ps --all`: no B1-probe containers. If unexpected existing resources appear, stop and inspect their ownership before any changes. **Do not use `up`, `run`, `build`, `down`, `down -v` or Prisma `dev` yet**.
+
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
 1. Prepare **one separate scratch checkout**, using a unique probe module/app name so the shared, persistent Prisma local emulators do not collide with `stack-parity` or other projects. Pin Composer to `0.29.1` and CLI to `8.0.0-rc.22`; select the ORM package from the upstream version-matched example and record its exact resolved peer tree. No dependency change to StackParity.
