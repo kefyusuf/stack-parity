@@ -170,9 +170,25 @@ $LASTEXITCODE
 
 This checks **Compose config and project-specific container inventory** only. Logical `config --volumes` names are not evidence that no Docker volumes exist; no images, networks or data were created by these inspection commands. `module.ts` still uses the original Composer app name `stack-parity` and remains **unsafe for an isolated Prisma dev launch**. The existing host port binding `127.0.0.1:3000` must not be published by the probe.
 
-**Next permitted step (toolchain image build only, no runtime):** run `docker compose --project-directory $probe -f "$probe\\compose.yaml" -p stackparity-b1-probe build dev`, then capture `$LASTEXITCODE` and `ps --all` again. `Dockerfile.dev` only installs the existing Node/Bun/pnpm/Git toolchain, with no Product or Postgres workload. The unique Compose project name ensures a distinct generated image name from the original project. This build can write to Docker's shared build cache but must not start a service, publish port 3000, or touch the original project's named volumes. If it fails, stop and record the error; do not clean/prune Docker resources to fix it.
+**User-executed isolated toolchain image build: PASS (recorded 2026-10-16).** From PowerShell with the same `-p stackparity-b1-probe` and `--project-directory $probe`:
+- `docker compose ... build dev` finished all 11/11 BuildKit steps, mostly cached, and reported `Image stackparity-b1-probe-dev Built` with `$LASTEXITCODE = 0`.
+- `docker compose ... ps --all` returned a header without containers and `$LASTEXITCODE = 0`.
+- The created image tag is `stackparity-b1-probe-dev:latest`; no Hono process, PostgreSQL, Prisma Composer emulator or cloud stage is shown as started. Docker image/build-cache writes are expected; **do not infer that any named volumes have already been created**.
 
-**Still prohibited:** `up`, `run`, `down -v`, `prisma dev`, migrations or cloud provisioning. Frozen dependency installation in the clone is a separate gate after successful toolchain image build and explicit resource review.
+**Dependency-install gate (NEXT; disposable probe only):** remote `main` includes a checked-in `pnpm-lock.yaml` (lockfile v9) with Composer `0.29.1`, CLI `8.0.0-rc.22`, and reviewed Effect RC overrides. The workspace's `strictDepBuilds: true` policy only explicitly allows `esbuild` and `workerd` lifecycle scripts. Install **without updating the lockfile or package manifests**:
+
+```powershell
+$probe = 'E:\projects\stack-parity-b1-probe'
+docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe run --rm --no-deps dev pnpm install --frozen-lockfile --reporter=append-only
+$LASTEXITCODE
+git -C $probe status --short
+docker compose --project-directory $probe -f "$probe\compose.yaml" -p stackparity-b1-probe ps --all
+$LASTEXITCODE
+```
+
+This step **does create a temporary one-off container**, a probe-owned Compose network and **three new named dependency volumes** (which persist after `--rm`); it may download packages from the registry and execute the permitted lifecycle scripts. `run` does not publish the service's configured host port unless `--service-ports` is specified; **do not add it**. The distinct `-p` protects the original project's named volumes. Require install exit code 0, no tracked file changes, and no lingering probe containers to accept this gate. Record ownership; never use `down -v`, pruning, broad script permissions, force upgrades or global cleanup on failure.
+
+**Still prohibited:** Compose `up`, `prisma dev`, schema/migration changes, `deploy`, Postgres provisioning, and any change to the original `E:\projects\stack-parity` checkout. Passing dependency install alone does not establish `LOCAL_DB_PASS`.
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
