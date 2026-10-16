@@ -192,7 +192,14 @@ This step **does create a temporary one-off container**, a probe-owned Compose n
 
 **Interpretation:** successful reproducible install at committed lockfile versions, with no tracked working-tree changes and no leftover one-off container visible. Three **probe-owned** named dependency volumes may remain intentionally; an empty container list is **expected** after `run --rm`. Do not delete these volumes or use `down -v`. This PASS does not imply a running Compose service, application tests, ORM contract emission, Postgres access or cloud validation.
 
-**Next isolated baseline checks (no DB or emulator):** from the same probe Compose project, run `pnpm typecheck` and `pnpm test` in one-off `run --rm --no-deps dev` containers, capture each exit code, and stop at the first failure. These exercise the existing B0 TypeScript/Hono smoke suite. Avoid `up` or `--service-ports`; don't attach to port 3000. Check `git status --short` and `ps --all` afterward. The uncached build can be checked in a separate gate.
+**User-executed B0 baseline verification: PASS 2/2 (2026-10-16).** In the separate B1-probe Compose project, using `run --rm --no-deps dev` (without published service ports):
+- `pnpm typecheck` ran `tsc -p tsconfig.json --noEmit` without reported diagnostics. PowerShell explicitly printed `Typecheck exit: 0`.
+- `pnpm test` invoked the existing public-api Bun test runner. `test/health.test.ts`: `GET /health returns the version from the shared contracts package` passed; reported `1 pass / 0 fail`, followed by `Test exit: 0`.
+- `git -C $probe status --short` produced empty output after the tests; no tracked changes observed. A post-test Compose `ps --all` was not included in this evidence; `--rm` is the intended cleanup behavior, not independent proof of container state.
+
+**Interpretation:** existing B0 typecheck/health unit test baseline **PASS** in the isolated probe; **no Product or Postgres integration test was run**. Do not infer anything about data contracts, ORM migrations or cloud compatibility from these tests.
+
+**Next independent build gate (no DB/emulator):** run `pnpm exec turbo run build --force` through the same probe `docker compose ... -p stackparity-b1-probe run --rm --no-deps dev` command. Turbo `--force` skips its task cache, requiring the build tasks to execute, without clearing Docker volumes or running Compose services. Record `$LASTEXITCODE`, inspect `git status --short` and `docker compose ... ps --all`; stop on any failure. Expected outcome includes Bun compiling the already-existing Hono entrypoint into `services/public-api/dist/server.mjs` (ignored/generated artifact, not a source change). **Do not start a service or deploy.**
 
 **Still prohibited:** Compose `up`, `prisma dev`, schema/migration changes, `deploy`, Postgres provisioning, and any change to the original `E:\projects\stack-parity` checkout. Passing dependency install or B0 baseline tests alone does not establish `LOCAL_DB_PASS`.
 
