@@ -207,6 +207,8 @@ The assistant ran an immutable archive of remote `main` at `eab6b2a85d46548fa3df
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
+**Preparation review (2026-10-25):** the [concrete isolation/cleanup proposal](B1-phase-b-isolation-plan.md) and [versioned source review](B1-phase-b-isolation-source-review.md) now specify a task-owned container/volume boundary, a unique module identity, an explicit emulator-state directory, shared private HOME/cache paths and a runtime with no external network or published ports. Compose configuration validation passed without starting resources. This is a proposal, not execution approval. Installed dependency state roots and first-use/offline asset behavior remain open; the source review records documentation drift beyond pinned CLI `8.0.0-rc.22`. Review these prerequisites before any runtime launch. `LOCAL_DB_PASS` remains NOT RUN.
+
 1. Prepare **one separate scratch checkout**, using a unique probe module/app name so the shared, persistent Prisma local emulators do not collide with `stack-parity` or other projects. Pin Composer to `0.29.1` and CLI to `8.0.0-rc.22`; select the ORM package from the upstream version-matched example and record its exact resolved peer tree. No dependency change to StackParity.
 2. Model one disposable, read-only test result table with a simple `id/name` shape and validate `contract emit`. Record generated `contract.json` and `contract.d.ts` without secrets. Verify and record the supported **migration** command and successful table provisioning in a database owned by the probe.
 3. Build and launch the **one-service, one-Postgres** Composer example locally, with `prisma dev module.ts` **without `--fresh`** and **without `deploy`**. The probe's HTTP listener must be loopback-only from the host's perspective. If the launcher does not actually provision DB and service, `BLOCKED`.
@@ -218,7 +220,7 @@ The above is an **acceptance protocol**, not a claim of Phase B execution. Phase
 ### Explicit outcome labels
 
 - `STATIC_SOURCE_REVIEWED`: versioned upstream examples and supported commands located; completed as a static-source step.
-- `CLI_HELP_OBSERVED`: historical partial evidence from 2026-10-13; superseded by the successful complete Phase A run below.
+- `CLI_HELP_OBSERVED`: historical partial evidence from 2026-10-13; superseded by the successful complete Phase A run documented above.
 - `LOCAL_TOOLCHAIN_PASS`: **PASS (2026-10-25)** — frozen baseline install, CLI version/help, typecheck, health unit test and uncached build; exact commands and versions captured in the linked evidence report.
 - `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
