@@ -14,6 +14,7 @@ Reviewed, **not executed** fixtures for the B1-D Phase B compatibility probe. Th
 | `probe/contract.prisma` | disposable `ProbeResult { id, name }` read-only table |
 | `probe/contract.ts`, `probe/service.ts`, `probe/server.ts` | contract hydration, compute service, loopback-only read-only Bun handler (503 on failure, never fabricated data) |
 | `validate-fixtures.sh` | review-time static assertions (55 checks) |
+| `check-compose-boundaries.sh` | ownership-review assertions on the resolved Compose config (31 checks: ports, namespaces, mounts, networks, env ownership) |
 
 ## Review-time validation (already recorded 2026-10-25)
 
@@ -28,6 +29,14 @@ Offline Compose structural check (no resources created):
 ```sh
 docker compose -f probe/b1-phase-b/compose.yaml config --quiet
 ```
+
+Ownership-review boundary assertions (also config-only, no resources created):
+
+```sh
+sh check-compose-boundaries.sh compose.yaml <work-dir>
+```
+
+Expected: `31 passed, 0 failed` and `COMPOSE_BOUNDARY_CHECK_PASS` (sensitivity-proven 2026-10-25 against a deliberately broken copy — see [the ownership review](../../docs/milestones/B1-phase-b-ownership-review-20261025.md)).
 
 ## Execution boundary (must hold at runtime)
 
