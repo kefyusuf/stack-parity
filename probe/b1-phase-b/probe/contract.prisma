@@ -1,0 +1,15 @@
+// use prisma-8
+//
+// B1-D Phase B probe data contract, authored in PSL. One disposable result
+// table — an opaque string id and a name — mirroring the proposed Product
+// read shape without implementing Product (see docs/milestones/B1-product-read-api-gate.md).
+// `prisma contract emit` turns this into contract.json (data the runtime
+// reads) and contract.d.ts (the branded types the service's typed client
+// flows from). Rows are seeded out-of-band by the reviewed runtime procedure;
+// no ids are generated here.
+model ProbeResult {
+  id String @id
+  name String
+
+  @@map("ProbeResult")
+}

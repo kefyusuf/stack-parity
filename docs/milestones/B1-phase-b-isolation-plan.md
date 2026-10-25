@@ -29,6 +29,8 @@ The module name alone is insufficient: emulator directory, HOME, process namespa
 
 This is a configuration review fixture, not a command to run now. `prepare` is for a separately reviewed dependency/materialization step; `runtime` is the only Composer launcher. Neither has an automatic restart policy. No service is started by the documentation validation.
 
+> **Source of truth (2026-10-25):** the fixture below is committed as a real file at [`probe/b1-phase-b/compose.yaml`](../../probe/b1-phase-b/compose.yaml), together with the `prepare.sh` / `manifest-additions.json` / `probe/*` fixtures and the validator it references. The committed copy carries two deltas recorded there: the additional `./manifest-additions.json:/input/manifest-additions.json:ro` prepare mount and the corrected runtime entry (`prisma dev probe/module.ts`). The YAML block below is retained as the originally reviewed shape; on drift the committed file wins.
+
 ```yaml
 services:
   prepare:

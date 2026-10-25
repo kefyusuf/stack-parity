@@ -2,6 +2,8 @@
 
 **Status: PROPOSED / NOT EXECUTED.** This document specifies and validates the disposable scratch materialization for the Phase B runtime probe. It is a review fixture for a **probe table**, not a Product endpoint. No container, volume, install, migration, database, emulator or cloud operation was performed or authorized. [B1 gate](B1-product-read-api-gate.md), [isolation plan](B1-phase-b-isolation-plan.md) and [pinned source closure](B1-phase-b-pinned-source-closure-20261025.md) still govern everything.
 
+> **Source of truth moved (2026-10-25):** the fixtures below are now committed as real files under [`probe/b1-phase-b/`](../../probe/b1-phase-b/README.md) — `compose.yaml`, `prepare.sh`, `manifest-additions.json`, `prisma.config.ts`, `probe/*` and `validate-fixtures.sh` — re-validated there (`55 passed, 0 failed`; `docker compose config` exit `0`; root typecheck/tests unaffected). The committed files supersede this document's embedded copies on any drift; the embedding below is retained as the recorded evidence of the test-first validation.
+
 ## Purpose
 
 This closes review-sequence step 2 of the isolation plan: a standalone scratch manifest with explicit pinned dependencies, a probe-owned lockfile procedure, the exact tagged-example transformation, and a `prepare.sh` specification — validated test-first (see evidence below) before any execution is requested. Review-sequence step 3 (ownership review) and step 4 (authorized runtime acceptance) remain open.
