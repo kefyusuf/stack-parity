@@ -75,7 +75,7 @@ This is **static source/documentation evidence, not a tested database integratio
 - **Existing Hono wiring check:** [standalone runner](../../services/public-api/src/local.ts) and [Composer entrypoint](../../services/public-api/src/server.ts) both import [the current app](../../services/public-api/src/app.ts), but only the latter has access to Composer service bindings. Preserve the B0 standalone `/health` seam while adding the single Product reader.
 - **Stage caveat:** [Composer deploy docs](https://www.prisma.io/docs/composer/deploying#production-and-stages) say isolated stages own their databases. Planning must identify how B1 seed data reaches the chosen stage privately and repeatably **before** approving a paid deployment. Do not seed by adding an unauthenticated mutation endpoint or by overwriting `spike-001`.
 
-## B1-D local compatibility preflight — executable protocol, NOT RUN
+## B1-D local compatibility preflight — Phase A PASS; Phase B NOT RUN
 
 This is a **throwaway technical probe**, not a Product implementation, runtime dependency change, or production recipe. It must be conducted **outside the repository checkout**, in an explicitly identified, disposable Linux working directory. Stop and record `BLOCKED` if the environment or dependencies are unavailable. **Do not substitute** a cloud database or GitHub CI workflow.
 
@@ -199,9 +199,11 @@ This step **does create a temporary one-off container**, a probe-owned Compose n
 
 **Interpretation:** existing B0 typecheck/health unit test baseline **PASS** in the isolated probe; **no Product or Postgres integration test was run**. Do not infer anything about data contracts, ORM migrations or cloud compatibility from these tests.
 
-**Next independent build gate (no DB/emulator):** run `pnpm exec turbo run build --force` through the same probe `docker compose ... -p stackparity-b1-probe run --rm --no-deps dev` command. Turbo `--force` skips its task cache, requiring the build tasks to execute, without clearing Docker volumes or running Compose services. Record `$LASTEXITCODE`, inspect `git status --short` and `docker compose ... ps --all`; stop on any failure. Expected outcome includes Bun compiling the already-existing Hono entrypoint into `services/public-api/dist/server.mjs` (ignored/generated artifact, not a source change). **Do not start a service or deploy.**
+**Independent build gate: subsequently PASS (2026-10-25).** The original `E:\projects\stack-parity-b1-probe` clone was intentionally removed during cleanup on 2026-10-24. The following evidence supersedes that path's preparation instructions; do not reuse the historical commands without re-establishing isolation.
 
-**Still prohibited:** Compose `up`, `prisma dev`, schema/migration changes, `deploy`, Postgres provisioning, and any change to the original `E:\projects\stack-parity` checkout. Passing dependency install or B0 baseline tests alone does not establish `LOCAL_DB_PASS`.
+The assistant ran an immutable archive of remote `main` at `eab6b2a85d46548fa3df3403c82c333d336e3bc6` inside a new disposable Linux volume, using the existing toolchain image and unique Compose project `stack-parity-b1-preflight-20261025`. Frozen install, all five version/help checks, typecheck, the existing health test and forced uncached build completed successfully. No application directory was bind-mounted for writing; the archive and check script were read-only inputs. Manifest, lockfile and workspace-policy SHA-256 checks remained unchanged. The temporary container, volume and network were removed; old projects' resources were untouched. See [exact commands, versions, results and cleanup evidence](B1-toolchain-preflight-20261025.md).
+
+**Current result:** `LOCAL_TOOLCHAIN_PASS`; the previously pending uncached baseline build is closed. `LOCAL_DB_PASS` remains **NOT RUN**. Before any Phase B resource operation, review a concrete isolation and cleanup plan for its Composer module identity, emulator state, database and loopback-only listener. The existing `stack-parity` identity is not safe for that probe. No Product implementation, migration, database provisioning, `prisma dev`, stage deployment or cloud teardown was performed by this verification. Repository changes are confined to planning/evidence documentation on PR #5.
 
 ### Phase B — disposable local runtime probe (requires a usable Linux Docker environment)
 
@@ -211,13 +213,13 @@ This step **does create a temporary one-off container**, a probe-owned Compose n
 4. Query a known row through the **real** ORM client, edit the row by a separate, local-only database connection, and verify the second read reflects the changed value. Record both observations and the missing/unavailable DB negative result; mocked reads or the compiler alone do not establish persistence.
 5. Stop the probe. Record any remaining local emulator-owned resources. **Never** delete or reset global emulator state, named volumes or other apps' resources automatically; document safe, ownership-checked cleanup separately before any destructive step.
 
-The above is an **acceptance protocol**, not a claim of Phase B execution. Phase A has user-provided CLI version/help output (recorded above) but has not reached full `LOCAL_TOOLCHAIN_PASS`. The assistant has not run Docker, migrations, a database or external deployment. A successful probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
+The above is an **acceptance protocol**, not a claim of Phase B execution. Phase A reached `LOCAL_TOOLCHAIN_PASS` on 2026-10-25, including an assistant-executed Docker baseline build. No migration, database or external deployment was run. A successful Phase B probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
 
 ### Explicit outcome labels
 
 - `STATIC_SOURCE_REVIEWED`: versioned upstream examples and supported commands located; completed as a static-source step.
-- `CLI_HELP_OBSERVED`: initial version/top-level help text received without recorded exit codes; the additional two targeted help commands each exited `0` (2026-10-13). **Current partial Phase A state**.
-- `LOCAL_TOOLCHAIN_PASS`: exact read-only local commands and versions captured; not yet achieved.
+- `CLI_HELP_OBSERVED`: historical partial evidence from 2026-10-13; superseded by the successful complete Phase A run below.
+- `LOCAL_TOOLCHAIN_PASS`: **PASS (2026-10-25)** — frozen baseline install, CLI version/help, typecheck, health unit test and uncached build; exact commands and versions captured in the linked evidence report.
 - `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
 - `CLOUD_STAGE_PASSED`: **not eligible** under this B1-D planning gate.
