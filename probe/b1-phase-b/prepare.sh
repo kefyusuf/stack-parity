@@ -62,4 +62,59 @@ pnpm exec prisma migration new
 find migrations -maxdepth 3 -type f -print
 sha256sum migrations/snapshots/*/contract.json 2>/dev/null || true
 
+# 5) Author the migration body per the scaffold's documented nextActions and
+#    self-emit ops.json by running the migration file with Node (offline).
+#    The body is deterministic from the probe contract snapshot: create the
+#    public schema and the read-only ProbeResult table (id/name text, id
+#    primary key), mirroring the tagged orm-demo migration shape.
+node <<'NODE_EOF'
+const fs = require('fs');
+const path = require('path');
+const migdir = fs.readdirSync('migrations/app')
+  .sort()
+  .map((d) => path.join('migrations/app', d))
+  .filter((d) => fs.statSync(d).isDirectory())
+  .pop();
+const snap = fs.readdirSync('migrations/snapshots')
+  .sort()
+  .map((d) => path.join('migrations/snapshots', d))
+  .filter((d) => fs.statSync(d).isDirectory())
+  .pop();
+if (!migdir || !snap) throw new Error('migration scaffold not found');
+const body = `#!/usr/bin/env -S node
+import type { Contract as End } from '../../snapshots/${path.basename(snap)}/contract';
+import endContract from '../../snapshots/${path.basename(snap)}/contract.json' with { type: 'json' };
+import { Migration, MigrationCLI, col, primaryKey } from '@prisma/orm-postgres/migration';
+
+export default class M extends Migration<never, End> {
+  override readonly endContractJson = endContract;
+
+  override get operations() {
+    return [
+      this.createSchema({ schema: 'public' }),
+      this.createTable({
+        schema: 'public',
+        table: 'ProbeResult',
+        columns: [
+          col('id', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('name', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+        ],
+        constraints: [primaryKey(['id'])],
+      }),
+    ];
+  }
+}
+
+MigrationCLI.run(import.meta.url, M);
+`;
+fs.writeFileSync(path.join(migdir, 'migration.ts'), body);
+console.log('authored', path.join(migdir, 'migration.ts'));
+NODE_EOF
+MIGDIR="$(find migrations/app -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+node "$MIGDIR/migration.ts"
+echo "--- attested ops.json ---"
+cat "$MIGDIR/ops.json"
+echo "--- migration.json ---"
+cat "$MIGDIR/migration.json"
+
 printf '\nB1_SCRATCH_PREPARED\n'
