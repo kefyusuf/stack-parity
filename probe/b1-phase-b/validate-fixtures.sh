@@ -42,6 +42,8 @@ has prepare.sh 'baseline.tar'
 has prepare.sh 'probe-fixtures.tar'
 has prepare.sh 'pnpm install'
 has prepare.sh 'contract emit'
+has prepare.sh 'bun build probe/server.ts'
+has prepare.sh '--outfile probe/dist/server.mjs'
 has prepare.sh 'migration new'
 has prepare.sh 'this.createTable'
 has prepare.sh "table: 'ProbeResult'"

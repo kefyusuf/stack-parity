@@ -53,6 +53,13 @@ sha256sum pnpm-lock.yaml
 pnpm exec prisma contract emit --config prisma.config.ts
 sha256sum probe/contract.json probe/contract.d.ts
 
+# 3b) Build the probe service entry with Bun. The node build adapter expects
+#     a pre-built artifact at the configured entry ('./dist/server.mjs'
+#     resolves against the service module's directory); this mirrors the
+#     tagged orm-demo build script.
+bun build probe/server.ts --target=bun --outfile probe/dist/server.mjs
+sha256sum probe/dist/server.mjs
+
 # 4) Migration authoring with the pinned CLI — file generation only; the
 #    surface check runs first because exact flags were only help-observed in
 #    Phase A. A failure here stops preparation (fail-closed), to be recorded
