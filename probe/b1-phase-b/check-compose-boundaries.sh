@@ -121,7 +121,7 @@ for (const n of names) {
     if (s.working_dir === '/workspace/probe') out.ok('runtime: working_dir /workspace/probe');
     else out.bad('runtime: working_dir: ' + s.working_dir);
     const cmd = JSON.stringify(s.command || []);
-    if (cmd === JSON.stringify(['pnpm', 'exec', 'prisma', 'dev', 'probe/module.ts'])) out.ok('runtime: command is prisma dev probe/module.ts');
+    if (cmd === JSON.stringify(['pnpm', 'exec', 'prisma', 'dev', 'module.ts'])) out.ok('runtime: command is prisma dev module.ts (scratch-root entry)');
     else out.bad('runtime: unexpected command: ' + cmd);
   }
 }

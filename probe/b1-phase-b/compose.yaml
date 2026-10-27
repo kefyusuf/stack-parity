@@ -44,7 +44,7 @@ services:
     network_mode: none
     working_dir: /workspace/probe
     environment: *probe-environment
-    command: [pnpm, exec, prisma, dev, probe/module.ts]
+    command: [pnpm, exec, prisma, dev, module.ts]
     volumes:
       - scratch:/workspace
 volumes:

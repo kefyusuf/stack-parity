@@ -70,17 +70,18 @@ else
   bad "manifest-additions.json: missing file"
 fi
 
-## probe/module.ts — unique probe identity, one database + one service
-has probe/module.ts "module('stack-parity-b1-runtime-20261025'"
-lacks probe/module.ts "module('stack-parity'"
-lacks probe/module.ts 'module("stack-parity"'
-has probe/module.ts "from '@prisma/composer-prisma-cloud/orm'"
-has probe/module.ts "postgres({ name: 'database'"
-has probe/module.ts "id: 'database'"
-has probe/module.ts "config: './prisma.config.ts'"
-has probe/module.ts 'deps: { db }'
-has probe/module.ts "from './probe/contract.ts'"
-has probe/module.ts "from './probe/service.ts'"
+## module.ts — unique probe identity, one database + one service
+## (module.ts lives at the scratch ROOT, mirroring the tagged orm-demo layout)
+has module.ts "module('stack-parity-b1-runtime-20261025'"
+lacks module.ts "module('stack-parity'"
+lacks module.ts 'module("stack-parity"'
+has module.ts "from '@prisma/composer-prisma-cloud/orm'"
+has module.ts "postgres({ name: 'database'"
+has module.ts "id: 'database'"
+has module.ts "config: './prisma.config.ts'"
+has module.ts 'deps: { db }'
+has module.ts "from './probe/contract.ts'"
+has module.ts "from './probe/service.ts'"
 
 ## probe/contract.prisma — PSL-first probe table
 firstline probe/contract.prisma '// use prisma-8'
