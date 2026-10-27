@@ -14,6 +14,24 @@ bad() { FAILS=$((FAILS+1)); printf 'FAIL: %s\n' "$1"; }
 
 mkdir -p "$WORK"
 
+# Live-image provenance: the Compose fixture references the toolchain by tag
+# with pull_policy never; the pinned image ID is verified here instead, so a
+# silently retagged image fails this check before any launch.
+IMAGE_TAG='stackparity-b1-probe-dev:latest'
+IMAGE_SHA='2ea151b932088e8f9d5c80ec3fac1ffa3e2627fd8c7277b56db0f8606eccec45'
+LIVE_ID="$(docker image inspect "$IMAGE_TAG" --format '{{.Id}}' 2>/dev/null || true)"
+if [ "$LIVE_ID" = "sha256:$IMAGE_SHA" ]; then
+  ok "live image $IMAGE_TAG resolves to the reviewed sha256:$IMAGE_SHA"
+else
+  bad "live image $IMAGE_TAG mismatch: ${LIVE_ID:-missing}"
+fi
+LIVE_USER="$(docker image inspect "$IMAGE_TAG" --format '{{.Config.User}}' 2>/dev/null || true)"
+if [ "$LIVE_USER" = "node" ]; then
+  ok "live image effective user is node"
+else
+  bad "live image user: ${LIVE_USER:-missing}"
+fi
+
 if docker compose -f "$COMPOSE" config --format json > "$WORK/resolved.json" 2>"$WORK/config.err"; then
   ok "compose config resolved"
 else
@@ -31,7 +49,8 @@ const out = {
   bad: (m) => { fails++; console.log('FAIL: ' + m); },
 };
 
-const SHA = '1af3cd0f9671b746f49dfa7b624228c5b1441efcd3a98bdec48267cde4a2e9d5';
+const SHA = '2ea151b932088e8f9d5c80ec3fac1ffa3e2627fd8c7277b56db0f8606eccec45';
+const IMAGE_TAG = 'stackparity-b1-probe-dev:latest';
 const S = c.services || {};
 const names = Object.keys(S).sort();
 if (JSON.stringify(names) === JSON.stringify(['prepare', 'runtime'])) out.ok('exactly two services: prepare, runtime');
@@ -50,8 +69,8 @@ const expectedEnv = {
 
 for (const n of names) {
   const s = S[n];
-  if ((s.image || '').includes(SHA)) out.ok(n + ': image pinned to reviewed toolchain sha');
-  else out.bad(n + ': image not pinned: ' + s.image);
+  if (s.image === IMAGE_TAG) out.ok(n + ': image is the reviewed toolchain tag (pull_policy never)');
+  else out.bad(n + ': unexpected image reference: ' + s.image);
   if (s.user === 'node') out.ok(n + ': user node');
   else out.bad(n + ': unexpected user: ' + s.user);
   if (!s.ports || s.ports.length === 0) out.ok(n + ': no published ports');

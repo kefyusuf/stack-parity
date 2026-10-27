@@ -38,8 +38,8 @@ Cleanup must compare actual label-filtered inventories against this ledger; any 
 
 ## Toolchain provenance
 
-- The pinned image is present locally: created `2026-10-13T10:53:19Z` (the Phase A toolchain image; not rebuilt).
-- Image environment: `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, `NODE_VERSION=24.21.0`. `bun@1.4.3` is installed globally into `/usr/local/bin` by the committed `Dockerfile.dev`, so the compute daemon's PATH-based `bun` resolution (pinned source closure requirement) is satisfied statically; Phase A preflight additionally recorded `bun --version` = `1.4.3` from this image, and `prepare.sh` step 0 re-records it at execution time.
+- **Update (2026-10-25, pre-execution):** the originally pinned Phase A image (`sha256:1af3cd0f…`) was found **removed** between two read-only inspections of this review session (no delete command was run in the session; cause unknown — possibly host-side Docker cleanup). Per the plan's presence-first rule, execution paused; the toolchain was **rebuilt** from the committed `Dockerfile.dev` (verified byte-identical to baseline `eab6b2a8` modulo CRLF checkout). New image ID `sha256:2ea151b932088e8f9d5c80ec3fac1ffa3e2627fd8c7277b56db0f8606eccec45`, effective user `node`. Because the active containerd image store does not resolve Compose `sha256:`-ID references reliably, the fixtures now reference the toolchain **by tag** (`stackparity-b1-probe-dev:latest`, `pull_policy: never`) and the boundary checker verifies the tag resolves to the recorded image ID (checker caught the stale sha-red reference first: `29/2` → fixed → `31/0` green).
+- Original provenance record: the Phase A image was created `2026-10-13T10:53:19Z` and never rebuilt; that record is retained for history. The rebuilt image carries the same committed recipe: `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, `node:24-bookworm-slim`, global `pnpm@11.28.5` + `bun@1.4.3`, so the compute daemon's PATH-based `bun` resolution (pinned source closure requirement) remains satisfied; `prepare.sh` step 0 re-records versions at execution time.
 
 ## What this review does not authorize
 

@@ -7,9 +7,16 @@
 # prepare: materializes the scratch (network available for the registry only).
 # runtime: the only Composer launcher; no network, no published ports.
 # Never start both together; after preparation, run only `runtime --no-deps`.
+#
+# Image note (2026-10-25): the containerd image store does not resolve
+# sha256-ID references in Compose reliably and the originally pinned Phase A
+# image vanished between two read-only inspections; the toolchain was rebuilt
+# from the committed Dockerfile.dev (byte-identical to baseline eab6b2a8) and
+# is now referenced by tag with pull_policy never. The checker verifies the
+# tag resolves to the recorded image ID before any launch.
 services:
   prepare:
-    image: sha256:1af3cd0f9671b746f49dfa7b624228c5b1441efcd3a98bdec48267cde4a2e9d5
+    image: stackparity-b1-probe-dev:latest
     pull_policy: never
     user: node
     working_dir: /workspace
@@ -30,7 +37,7 @@ services:
       - ./probe-fixtures.tar:/input/probe-fixtures.tar:ro
       - scratch:/workspace
   runtime:
-    image: sha256:1af3cd0f9671b746f49dfa7b624228c5b1441efcd3a98bdec48267cde4a2e9d5
+    image: stackparity-b1-probe-dev:latest
     pull_policy: never
     user: node
     init: true
