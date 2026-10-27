@@ -24,6 +24,11 @@ PROBE=/workspace/probe
 rm -rf "$PROBE"
 mkdir -p "$PROBE"
 tar -xf /input/baseline.tar -C "$PROBE"
+# Overlay the reviewed probe fixtures onto the extracted baseline: the
+# transformed prisma.config.ts (with the orm section) and the probe/ module
+# surface. Without this overlay the probe contract and module would not
+# exist inside the scratch.
+tar -xf /input/probe-fixtures.tar -C "$PROBE"
 cd "$PROBE"
 
 # 1) Manifest additions: the exact ORM peer and the out-of-band verification

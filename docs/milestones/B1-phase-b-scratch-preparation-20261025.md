@@ -273,9 +273,10 @@ The isolation plan's `prepare` service currently mounts `baseline.tar` and `prep
 
 ```yaml
       - ./manifest-additions.json:/input/manifest-additions.json:ro
+      - ./probe-fixtures.tar:/input/probe-fixtures.tar:ro
 ```
 
-This amendment must appear in the ownership review's resolved-config inspection before any execution.
+**Runtime-readiness correction (2026-10-25, before execution):** the first execution-readiness check caught a materialization gap — `prepare.sh` extracted the baseline but never overlaid the probe fixtures, so the probe contract/module could not exist in the scratch. Caught test-first (boundary checker `30/1`, fixture validator `55/1`, both exit 1) and fixed: `prepare.sh` now overlays `/input/probe-fixtures.tar` (generated at task setup from `prisma.config.ts` + `probe/`), and the second mount above was added. Re-validated green: boundary checker `31/0`, fixture validator `56/0`. This amendment must appear in the ownership review's resolved-config inspection before any execution.
 
 ## Open points carried into the ownership review / runtime
 

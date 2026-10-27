@@ -39,6 +39,7 @@ else
 fi
 has prepare.sh 'set -eu'
 has prepare.sh 'baseline.tar'
+has prepare.sh 'probe-fixtures.tar'
 has prepare.sh 'pnpm install'
 has prepare.sh 'contract emit'
 has prepare.sh 'migration new'

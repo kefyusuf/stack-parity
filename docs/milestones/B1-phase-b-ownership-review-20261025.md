@@ -15,6 +15,8 @@ The committed [`probe/b1-phase-b/check-compose-boundaries.sh`](../../probe/b1-ph
 - **Isolation:** no published ports on either service; not privileged; no host PID or IPC namespaces; runtime `network_mode: none` (offline, loopback-only); no external or host networks; no custom networks.
 - **State ownership:** both services carry the identical task-owned environment — `HOME=/workspace/home`, all four XDG roots, `TMPDIR=/workspace/tmp`, `PNPM_CONFIG_STORE_DIR=/workspace/node_modules/.pnpm-store`, `PRISMA_COMPOSER_EMULATORS_DIR=/workspace/state/emulators` — matching the [pinned source closure](B1-phase-b-pinned-source-closure-20261025.md) finding that `@prisma/dev` state follows `XDG_*`/`HOME` only.
 - **Mounts:** no Docker socket anywhere; every bind mount read-only; `prepare` mounts exactly the three inputs (`baseline.tar`, `prepare.sh`, `manifest-additions.json`) plus the `scratch` volume; `runtime` mounts **no** bind at all, only `scratch`.
+
+> **Amendment (2026-10-25, post-review, pre-execution):** the runtime-readiness check exposed a missing fourth input — the probe fixture overlay — and the boundary checker caught it red-first (`30/1`) before the fixture fix. `prepare` now mounts exactly **four** read-only inputs (`baseline.tar`, `prepare.sh`, `manifest-additions.json`, `probe-fixtures.tar`) plus `scratch`, and the checker asserts all four (`31/0` green). Runtime-readiness gap recorded in [the scratch preparation review](B1-phase-b-scratch-preparation-20261025.md).
 - **Runtime entry:** `init: true`, `working_dir: /workspace/probe`, command exactly `pnpm exec prisma dev probe/module.ts`; `scratch` volume is task-owned (not external).
 
 ## Resource inventories (read-only, 2026-10-25)

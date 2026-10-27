@@ -27,6 +27,7 @@ services:
       - ./baseline.tar:/input/baseline.tar:ro
       - ./prepare.sh:/input/prepare.sh:ro
       - ./manifest-additions.json:/input/manifest-additions.json:ro
+      - ./probe-fixtures.tar:/input/probe-fixtures.tar:ro
       - scratch:/workspace
   runtime:
     image: sha256:1af3cd0f9671b746f49dfa7b624228c5b1441efcd3a98bdec48267cde4a2e9d5

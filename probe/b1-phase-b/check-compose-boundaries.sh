@@ -83,7 +83,7 @@ for (const n of names) {
   else out.bad(n + ': writable bind mounts: ' + unro.map((v) => v.source).join(','));
 
   if (n === 'prepare') {
-    const wantBinds = ['baseline.tar', 'prepare.sh', 'manifest-additions.json'];
+    const wantBinds = ['baseline.tar', 'prepare.sh', 'manifest-additions.json', 'probe-fixtures.tar'];
     const gotBinds = binds.map((v) => String(v.source).replace(/\\/g, '/').split('/').pop()).sort();
     if (JSON.stringify(gotBinds) === JSON.stringify([...wantBinds].sort())) out.ok('prepare: exactly the three read-only input mounts');
     else out.bad('prepare: unexpected bind mounts: ' + gotBinds.join(','));
