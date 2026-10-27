@@ -217,19 +217,21 @@ The assistant ran an immutable archive of remote `main` at `eab6b2a85d46548fa3df
 
 The above is an **acceptance protocol**, not a claim of Phase B execution. Phase A reached `LOCAL_TOOLCHAIN_PASS` on 2026-10-25, including an assistant-executed Docker baseline build. No migration, database or external deployment was run. A successful Phase B probe would resolve only the *technical runtime* portion of D-B1-01, **not** stage seeding, billing, approval or B1 implementation authorization.
 
+**Phase B executed (2026-10-27): `LOCAL_DB_PASS` (technical runtime portion).** With explicit user authorization, the probe ran from a task-owned directory outside the checkout against the committed fixtures: frozen prepare (install, offline contract emit, authored + self-attested migration, bun-built entry), offline `prisma dev` bootstrap with automatic migration apply, empty-table `200 {"ok":true,"results":[]}`, out-of-band `pg` seed and update reflected in subsequent ORM HTTP reads, and an unavailable-DB `503 {"ok":false}` with no fabricated data; ledger-compared teardown left zero task-labeled resources. Full commands, hashes and observations: [runtime probe evidence](B1-phase-b-runtime-evidence-20261027.md). Four execution-readiness defects were caught red-first by the committed checkers before launch (materialization overlay, migration body authoring, scratch-root entry layout, pre-built entry) — see the evidence document.
+
 ### Explicit outcome labels
 
 - `STATIC_SOURCE_REVIEWED`: versioned upstream examples and supported commands located; completed as a static-source step.
 - `CLI_HELP_OBSERVED`: historical partial evidence from 2026-10-13; superseded by the successful complete Phase A run documented above.
 - `LOCAL_TOOLCHAIN_PASS`: **PASS (2026-10-25)** — frozen baseline install, CLI version/help, typecheck, health unit test and uncached build; exact commands and versions captured in the linked evidence report.
-- `LOCAL_DB_PASS`: real isolated Postgres migration plus repeated, changed-data reads; not yet achieved.
+- `LOCAL_DB_PASS`: **PASS (2026-10-27)** — real isolated Postgres migration plus repeated, changed-data ORM reads and the unavailable-DB negative, in the reviewed disposable boundary; [evidence](B1-phase-b-runtime-evidence-20261027.md).
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
 - `CLOUD_STAGE_PASSED`: **not eligible** under this B1-D planning gate.
 
 ## Decisions still open
 
-- **D-B1-01:** Confirm Composer's ORM-backed `postgres()` path with the pinned toolchain using a minimal **executed** local check; version numbers differing alone are not a blocker.
-- **D-B1-02:** Review the candidate `id/name` HTTP contract, deterministic row fixture and direct-database mutation proof; keep it read-only to callers.
-- **D-B1-03:** Review the disposable local DB reset procedure, isolated stage's non-public seed mechanism, budget cap, owner and explicit teardown/retention decision.
+- **D-B1-01:** **Resolved at runtime level (2026-10-27)** — Composer's ORM-backed `postgres()` path verified by the executed local probe (`LOCAL_DB_PASS`, [evidence](B1-phase-b-runtime-evidence-20261027.md)). No version upgrade was needed.
+- **D-B1-02:** Review the candidate `id/name` HTTP contract, deterministic row fixture and direct-database mutation proof; keep it read-only to callers. The probe exercised exactly this shape; reviewer sign-off still required.
+- **D-B1-03:** Review the disposable local DB reset procedure, isolated stage's non-public seed mechanism, budget cap, owner and explicit teardown/retention decision. The probe recorded the local reset procedure evidence (never `--fresh`); stage-side items remain open.
 
 **Exit from B1-D:** reviewer-approved acceptance scope, resolved D-B1-01..03, and a separate explicitly authorized implementation task. Opening this planning document alone is not approval.
