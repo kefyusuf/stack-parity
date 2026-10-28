@@ -1,6 +1,6 @@
 # B1 Definition Gate — First Product Read API Slice
 
-- **Status:** PROPOSED / REVIEW REQUIRED — **implementation not authorized**
+- **Status:** APPROVED — **B1-D closed 2026-10-27** (D-B1-01 runtime-resolved via `LOCAL_DB_PASS`; D-B1-02 contract scope approved by the reviewer; D-B1-03 local reset ratified and stage items deferred to the separately-authorized cloud step of B1-AC-06). B1-I implementation is **explicitly authorized as a separate task**; any cloud stage still requires its own approval.
 - **Tracker:** [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4)
 - **Prerequisite:** B0 / SPIKE-001 `PASS` (8/8); [PR #3 merged](https://github.com/kefyusuf/stack-parity/pull/3), [Issue #1 closed](https://github.com/kefyusuf/stack-parity/issues/1) on 2026-10-13
 - **Change type:** Planning and acceptance boundary only; **no runtime changes in this PR**
@@ -228,10 +228,10 @@ The above is an **acceptance protocol**, not a claim of Phase B execution. Phase
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
 - `CLOUD_STAGE_PASSED`: **not eligible** under this B1-D planning gate.
 
-## Decisions still open
+## Decisions — closed 2026-10-27 (reviewer sign-off recorded in [the exit review](B1-d-exit-review-20261027.md))
 
-- **D-B1-01:** **Resolved at runtime level (2026-10-27)** — Composer's ORM-backed `postgres()` path verified by the executed local probe (`LOCAL_DB_PASS`, [evidence](B1-phase-b-runtime-evidence-20261027.md)). No version upgrade was needed.
-- **D-B1-02:** Review the candidate `id/name` HTTP contract, deterministic row fixture and direct-database mutation proof; keep it read-only to callers. The probe exercised exactly this shape; reviewer sign-off still required. **Decision package prepared (2026-10-27):** see [the B1-D exit review](B1-d-exit-review-20261027.md).
-- **D-B1-03:** Review the disposable local DB reset procedure, isolated stage's non-public seed mechanism, budget cap, owner and explicit teardown/retention decision. The probe recorded the local reset procedure evidence (never `--fresh`); stage-side items remain open. **Decision package prepared (2026-10-27):** see [the B1-D exit review](B1-d-exit-review-20261027.md), which recommends deferring stage-side items to the separately-authorized cloud step.
+- **D-B1-01: RESOLVED (runtime, 2026-10-27)** — Composer's ORM-backed `postgres()` path verified by the executed local probe (`LOCAL_DB_PASS`, [evidence](B1-phase-b-runtime-evidence-20261027.md)). No version upgrade was needed.
+- **D-B1-02: APPROVED (2026-10-27)** — the candidate `{id, name}` HTTP contract, deterministic fixture semantics, internal `order by id`, empty-dataset shape, and out-of-band mutation proof are the binding acceptance scope for B1-I (AC-01..07). The probe exercised exactly this shape and mechanism.
+- **D-B1-03: PARTIALLY RESOLVED (2026-10-27)** — the disposable local DB reset procedure is ratified (task-owned volume, ledger-compared teardown, never `--fresh`); the non-public stage seed mechanism is specified in advance and the budget cap / owner / teardown decision is **deferred to the separately-authorized cloud step** (B1-AC-06). `spike-001` remains live and untouched, with its retirement as a separate user-owned decision.
 
-**Exit from B1-D:** reviewer-approved acceptance scope, resolved D-B1-01..03, and a separate explicitly authorized implementation task. Opening this planning document alone is not approval.
+**Exit from B1-D: recorded 2026-10-27.** Reviewer-approved acceptance scope (D-B1-02), resolved D-B1-01, ratified D-B1-03 (local), and the separately authorized implementation task (B1-I) satisfy the exit conditions. Opening or merging planning documents alone never constituted approval; this closure records the reviewer's explicit decisions.

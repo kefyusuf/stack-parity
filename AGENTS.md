@@ -6,11 +6,11 @@
 
 Build a production-shaped, open-source reference application demonstrating how independent TypeScript frameworks coexist in one product.
 
-## Current gate: B1 definition — planning only
+## Current gate: B1-I — first Product read slice (authorized 2026-10-27)
 
-B0 / SPIKE-001 is closed with evidence: PR #3 merged and Issue #1 closed on 2026-10-13. The active task is Issue #4, a documentation/review gate for the first Product read-only API slice. **Do not implement Product, provision a database, deploy another cloud stage, or promote HOLD technologies until B1 is reviewed and explicitly authorized.**
+B0 / SPIKE-001 is closed with evidence (PR #3 merged, Issue #1 closed). The B1 definition gate (Issue #4, PR #5) closed on 2026-10-27: D-B1-01 runtime-resolved (`LOCAL_DB_PASS`), D-B1-02 contract scope approved, D-B1-03 local reset ratified and stage items deferred to the separately-authorized cloud step (B1-AC-06). **B1-I is explicitly authorized: implement `GET /products` in the existing Hono service per the approved scope, in small verifiable units. Any cloud stage deploy still requires its own separate approval. HOLD technologies (Astro/Next/Nuxt/Nest) remain out of scope.**
 
-Read `docs/bootstrap-brief-v0.1.md`, `docs/spikes/SPIKE-001.md`, and `docs/milestones/B1-product-read-api-gate.md` before making changes.
+Read `docs/milestones/B1-product-read-api-gate.md`, `docs/milestones/B1-d-exit-review-20261027.md`, and `docs/milestones/B1-phase-b-runtime-evidence-20261027.md` before making changes.
 
 ## Non-negotiable boundaries
 
