@@ -231,7 +231,7 @@ The above is an **acceptance protocol**, not a claim of Phase B execution. Phase
 ## Decisions still open
 
 - **D-B1-01:** **Resolved at runtime level (2026-10-27)** — Composer's ORM-backed `postgres()` path verified by the executed local probe (`LOCAL_DB_PASS`, [evidence](B1-phase-b-runtime-evidence-20261027.md)). No version upgrade was needed.
-- **D-B1-02:** Review the candidate `id/name` HTTP contract, deterministic row fixture and direct-database mutation proof; keep it read-only to callers. The probe exercised exactly this shape; reviewer sign-off still required.
-- **D-B1-03:** Review the disposable local DB reset procedure, isolated stage's non-public seed mechanism, budget cap, owner and explicit teardown/retention decision. The probe recorded the local reset procedure evidence (never `--fresh`); stage-side items remain open.
+- **D-B1-02:** Review the candidate `id/name` HTTP contract, deterministic row fixture and direct-database mutation proof; keep it read-only to callers. The probe exercised exactly this shape; reviewer sign-off still required. **Decision package prepared (2026-10-27):** see [the B1-D exit review](B1-d-exit-review-20261027.md).
+- **D-B1-03:** Review the disposable local DB reset procedure, isolated stage's non-public seed mechanism, budget cap, owner and explicit teardown/retention decision. The probe recorded the local reset procedure evidence (never `--fresh`); stage-side items remain open. **Decision package prepared (2026-10-27):** see [the B1-D exit review](B1-d-exit-review-20261027.md), which recommends deferring stage-side items to the separately-authorized cloud step.
 
 **Exit from B1-D:** reviewer-approved acceptance scope, resolved D-B1-01..03, and a separate explicitly authorized implementation task. Opening this planning document alone is not approval.
