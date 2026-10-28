@@ -18,7 +18,8 @@ process.on("uncaughtException", (err) => {
   console.error("[public-api] uncaught exception:", err.message);
 });
 
-const { db, port } = await service.load();
+const { db } = await service.load();
+const port = service.port();
 
 const readProducts: ProductReader = async () => {
   const rows = await db.client.orm.public.Product.all();
