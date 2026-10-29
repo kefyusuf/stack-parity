@@ -1,6 +1,6 @@
 # SPIKE-001: pnpm/Turborepo Shared Contract → Hono → Prisma Compute
 
-- **Status:** TECHNICAL PASS (2026-10-13) — local Docker/Composer, isolated Prisma Compute stage deploy, and external `GET /health` HTTP 200 verified; PR review/merge pending
+- **Status:** CLOSED / TECHNICAL PASS (2026-10-13) — AC-01..08 verified, [PR #3](https://github.com/kefyusuf/stack-parity/pull/3) merged, [Issue #1](https://github.com/kefyusuf/stack-parity/issues/1) closed; isolated stage resource retention/teardown still requires a separate decision
 - **Issue:** #1
 - **Type:** Technical feasibility
 - **Milestone:** B0
@@ -78,4 +78,4 @@ No database, model migrations, Product/Customer/Order implementation, frontend a
 
 ## Next only after PASS
 
-First Product vertical slice: contract → persistence → `GET /products` → test → deploy.
+The proposed first Product vertical slice is: contract → persistence → `GET /products` → tests → a separately approved isolated stage deployment. Its **definition/review gate**, not implementation, is tracked in [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4) and [B1 planning brief](../milestones/B1-product-read-api-gate.md). No cloud deploy or Product code is authorized merely because SPIKE-001 passed.
