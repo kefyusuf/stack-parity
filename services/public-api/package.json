@@ -6,7 +6,8 @@
   "scripts": {
     "build": "bun build src/server.ts --target=bun --outfile dist/server.mjs",
     "test": "bun test",
-    "dev:standalone": "bun run src/local.ts"
+    "dev:standalone": "bun run src/local.ts",
+    "seed": "node scripts/seed.mjs"
   },
   "dependencies": {
     "@stack-parity/contracts": "workspace:*",

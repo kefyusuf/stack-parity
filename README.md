@@ -4,17 +4,26 @@
 
 StackParity is an open-source, production-shaped reference project exploring how distinct TypeScript stacks can coexist within one product through stable contracts and independently verifiable deployment boundaries.
 
-> **Status: B0 complete; B1 definition/review only.** SPIKE-001 passed on an isolated Prisma Compute stage (2026-10-13), and PR #3 was merged. No production application or Product feature has been deployed.
+> **Status: B1 / First Product read slice (in review).** SPIKE-001 passed on an isolated Prisma Compute stage (2026-10-13). The B1 definition gate closed on 2026-10-27; the first Product read slice is implemented and locally verified against a real disposable Postgres. Cloud deployment of the slice remains pending a separate approval.
 
 ## Current objective
 
-The B0 feasibility seam has been proven:
+Prove a single, narrow technical seam:
 
 `pnpm workspace → shared contracts package → Hono service → Prisma Compute`
 
-**SPIKE-001 passed**: the public Compute stage returned HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}` from `GET /health`. See the [SPIKE-001 execution evidence](docs/spikes/SPIKE-001-execution.md).
+This is **SPIKE-001**. That requirement passed: the public Compute stage returned HTTP 200 and `{"status":"ok","contractVersion":"spike-001"}` from `GET /health`. See the [SPIKE-001 execution evidence](docs/spikes/SPIKE-001-execution.md).
 
-**NEXT (planning only):** [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4) defines a [gated first Product read API slice](docs/milestones/B1-product-read-api-gate.md). No Product implementation, database provisioning, or new deployment is authorized by that plan.
+## B1: first Product read slice
+
+The existing Hono service now serves `GET /products` — a database-backed, contract-typed read path over the shared `@stack-parity/contracts` types:
+
+`Prisma Postgres → Hono GET /products → HTTP JSON consumer`
+
+- `GET /health` is unchanged; without a database the standalone runner answers `GET /products` with `503` (fail-closed, no fabricated data).
+- The Product table, emitted data contract and attested migration live in `services/public-api`; migrations apply automatically during local Composer bootstrap.
+- Deterministic seed: `DATABASE_URL=<connection string> pnpm --filter @stack-parity/public-api seed` (connection string stays outside Git).
+- Scope and acceptance: [B1 gate](docs/milestones/B1-product-read-api-gate.md) and the [approved B1-D scope](docs/milestones/B1-d-exit-review-20261027.md). Deploying this graph to any stage requires separate approval (B1-AC-06).
 
 ## Intended reference application (not implemented)
 
