@@ -13,23 +13,30 @@
 | Teardown | **immediately after external evidence** | bounds any billing exposure to the deploy window; if the user wants retention instead, they say so before step 1 |
 | Budget | no numeric cap given; exposure bounded by immediate teardown | if the platform requires a paid tier for an additional stage, the user decides before continuing |
 
-## Step 1 — user: authenticated session (one interactive container session)
+## Step 1 — user: provide a service token (one-time, no terminal commands)
 
-All credential-dependent commands run in **one** `docker compose run` session so the minted URL never leaves it:
+The toolchain has no stored platform credentials and the CLI's browser-login callback cannot reach a container's loopback from the host browser. The CLI's documented non-interactive path is `PRISMA_SERVICE_TOKEN` ("In CI or other non-interactive environments, skip login and set PRISMA_SERVICE_TOKEN instead" — `prisma auth --help`).
 
-```powershell
-docker compose run --rm dev sh
-# inside the container:
-pnpm exec prisma auth login                       # browser flow; token lives in this container only
+1. Create a service token for the workspace in the Prisma console (browser).
+2. Save it to `C:\Users\yukonit\.prisma-service-token` (plain file, **outside the repository**; never pasted into chat or committed).
+3. Say it is ready — everything below is then executed by the assistant, reading the token from that file into the process environment only. The token value is never printed, logged or committed; after AC-06 the user should revoke/rotate it.
+
+Fallback (if the console path is unavailable): an interactive `docker compose run --rm dev sh` session running `pnpm exec prisma auth login` + the steps below manually (the B0-familiar flow).
+
+## Step 2 — deploy + private seed (assistant-executed, token from the local file)
+
+Every command reads `PRISMA_SERVICE_TOKEN` from the local file; the database is **hosted Prisma Cloud Postgres — nothing database-related runs in Docker**; Docker is only the CLI runner:
+
+```sh
+export PRISMA_SERVICE_TOKEN="$(cat /c/Users/yukonit/.prisma-service-token)"
 pnpm exec prisma deploy module.ts --stage b1-product-read --report /tmp/deploy-report.json
-pnpm exec prisma postgres list                    # note the db id (db_…) for the stage — ids are not secrets
-pnpm exec prisma postgres connection create <db-id> --name b1-seed
-# → connection URL prints ONCE. Keep it in the shell:
-export DATABASE_URL='<paste the printed URL>'
-pnpm --filter @stack-parity/public-api seed
+pnpm exec prisma postgres list                          # capture the stage db id (not a secret)
+pnpm exec prisma postgres connection create <db-id> --name b1-seed > /tmp/seed-url   # prints ONCE, captured to file, never displayed
+DATABASE_URL="$(cat /tmp/seed-url)" pnpm --filter @stack-parity/public-api seed
+rm /tmp/seed-url
 ```
 
-Expected: deploy report (resources + preview URL), migration applied by the deploy lowering, `seed: 1 fixture row(s) ensured`.
+Expected: deploy report (resources + public service URL), migration applied by the deploy lowering, `seed: 1 fixture row(s) ensured`.
 
 ## Step 2 — external verification
 
