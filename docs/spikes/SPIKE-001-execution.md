@@ -1,6 +1,6 @@
 # SPIKE-001 Execution & Evidence
 
-**Status: SPIKE-001 TECHNICAL ACCEPTANCE PASS — local checks, Composer, isolated Prisma Compute deployment, and external HTTP 200 verified; PR merge review pending**
+**Status: SPIKE-001 CLOSED / TECHNICAL ACCEPTANCE PASS — AC-01..08 verified on 2026-10-13; PR #3 squash-merged as `eab6b2a85d46548fa3df3403c82c333d336e3bc6`, Issue #1 closed. This report preserves historical interim blockers and user-run evidence. The live `spike-001` stage is not approved for automatic deletion.**
 **Issue:** #1
 **Branch:** `spike/compute-monorepo-foundation`
 

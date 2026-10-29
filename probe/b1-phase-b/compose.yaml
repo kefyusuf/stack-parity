@@ -1,0 +1,51 @@
+# B1-D Phase B runtime probe — reviewed fixture, NOT started in PR #5.
+# Source of truth for the isolation design in
+# docs/milestones/B1-phase-b-isolation-plan.md. Execution happens only from a
+# task-owned copy OUTSIDE this repository checkout, after the ownership
+# review and an explicit user authorization; see README.md in this directory.
+#
+# prepare: materializes the scratch (network available for the registry only).
+# runtime: the only Composer launcher; no network, no published ports.
+# Never start both together; after preparation, run only `runtime --no-deps`.
+#
+# Image note (2026-10-25): the containerd image store does not resolve
+# sha256-ID references in Compose reliably and the originally pinned Phase A
+# image vanished between two read-only inspections; the toolchain was rebuilt
+# from the committed Dockerfile.dev (byte-identical to baseline eab6b2a8) and
+# is now referenced by tag with pull_policy never. The checker verifies the
+# tag resolves to the recorded image ID before any launch.
+services:
+  prepare:
+    image: stackparity-b1-probe-dev:latest
+    pull_policy: never
+    user: node
+    working_dir: /workspace
+    environment: &probe-environment
+      HOME: /workspace/home
+      XDG_CONFIG_HOME: /workspace/home/.config
+      XDG_CACHE_HOME: /workspace/home/.cache
+      XDG_DATA_HOME: /workspace/home/.local/share
+      XDG_STATE_HOME: /workspace/home/.local/state
+      TMPDIR: /workspace/tmp
+      PNPM_CONFIG_STORE_DIR: /workspace/node_modules/.pnpm-store
+      PRISMA_COMPOSER_EMULATORS_DIR: /workspace/state/emulators
+    command: [sh, /input/prepare.sh]
+    volumes:
+      - ./baseline.tar:/input/baseline.tar:ro
+      - ./prepare.sh:/input/prepare.sh:ro
+      - ./manifest-additions.json:/input/manifest-additions.json:ro
+      - ./probe-fixtures.tar:/input/probe-fixtures.tar:ro
+      - scratch:/workspace
+  runtime:
+    image: stackparity-b1-probe-dev:latest
+    pull_policy: never
+    user: node
+    init: true
+    network_mode: none
+    working_dir: /workspace/probe
+    environment: *probe-environment
+    command: [pnpm, exec, prisma, dev, module.ts]
+    volumes:
+      - scratch:/workspace
+volumes:
+  scratch:
