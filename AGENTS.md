@@ -6,11 +6,11 @@
 
 Build a production-shaped, open-source reference application demonstrating how independent TypeScript frameworks coexist in one product.
 
-## Current gate: B1-I — first Product read slice (authorized 2026-10-27)
+## Current gate: B1 COMPLETE — all acceptance criteria PASS (2026-10-29)
 
-B0 / SPIKE-001 is closed with evidence (PR #3 merged, Issue #1 closed). The B1 definition gate (Issue #4, PR #5) closed on 2026-10-27: D-B1-01 runtime-resolved (`LOCAL_DB_PASS`), D-B1-02 contract scope approved, D-B1-03 local reset ratified and stage items deferred to the separately-authorized cloud step (B1-AC-06). **B1-I is explicitly authorized: implement `GET /products` in the existing Hono service per the approved scope, in small verifiable units. Any cloud stage deploy still requires its own separate approval. HOLD technologies (Astro/Next/Nuxt/Nest) remain out of scope.**
+B0 / SPIKE-001 closed with evidence. **B1 is fully closed**: the definition gate (Issue #4, PR #5) closed 2026-10-27, the first Product read slice (`GET /products` on the existing Hono service over Prisma Postgres) was implemented and merged (`363242c`, Issue #6, PR #7), and AC-06 passed on an isolated stage that was deployed, privately seeded, externally verified and torn down ([stage evidence](docs/milestones/B1-ac06-stage-evidence-20261029.md)). The live `spike-001` stage remains untouched (retirement is a separate user decision). **Next milestone work requires a new scoped proposal per the roadmap.** Any new cloud stage deploy still requires its own approval. HOLD technologies (Astro/Next/Nuxt/Nest) remain out of scope.
 
-Read `docs/milestones/B1-product-read-api-gate.md`, `docs/milestones/B1-d-exit-review-20261027.md`, and `docs/milestones/B1-phase-b-runtime-evidence-20261027.md` before making changes.
+Read `docs/milestones/B1-product-read-api-gate.md`, `docs/milestones/B1-i-implementation-evidence-20261028.md`, and `docs/milestones/B1-ac06-stage-evidence-20261029.md` before making changes.
 
 ## Non-negotiable boundaries
 

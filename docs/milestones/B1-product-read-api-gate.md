@@ -1,7 +1,7 @@
 # B1 Definition Gate — First Product Read API Slice
 
-- **Status:** APPROVED — **B1-D closed 2026-10-27** (D-B1-01 runtime-resolved via `LOCAL_DB_PASS`; D-B1-02 contract scope approved by the reviewer; D-B1-03 local reset ratified and stage items deferred to the separately-authorized cloud step of B1-AC-06). B1-I implementation is **explicitly authorized as a separate task**; any cloud stage still requires its own approval.
-- **Tracker:** [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4)
+- **Status: CLOSED — ALL ACCEPTANCE CRITERIA PASS (2026-10-29).** B1-D closed 2026-10-27 with recorded reviewer decisions; B1-I implemented and merged (`363242c`); **AC-06 passed on 2026-10-29** — isolated stage `b1-product-read` deployed, privately seeded, externally verified (`GET /products` → 200 database-backed JSON), seed credential revoked and resources torn down. Evidence: [`B1-ac06-stage-evidence-20261029.md`](B1-ac06-stage-evidence-20261029.md). The live `spike-001` stage was untouched; its retirement remains a separate user decision.
+- **Tracker:** [Issue #4](https://github.com/kefyusuf/stack-parity/issues/4) (closed)
 - **Prerequisite:** B0 / SPIKE-001 `PASS` (8/8); [PR #3 merged](https://github.com/kefyusuf/stack-parity/pull/3), [Issue #1 closed](https://github.com/kefyusuf/stack-parity/issues/1) on 2026-10-13
 - **Change type:** Planning and acceptance boundary only; **no runtime changes in this PR**
 
@@ -226,7 +226,7 @@ The above is an **acceptance protocol**, not a claim of Phase B execution. Phase
 - `LOCAL_TOOLCHAIN_PASS`: **PASS (2026-10-25)** — frozen baseline install, CLI version/help, typecheck, health unit test and uncached build; exact commands and versions captured in the linked evidence report.
 - `LOCAL_DB_PASS`: **PASS (2026-10-27)** — real isolated Postgres migration plus repeated, changed-data ORM reads and the unavailable-DB negative, in the reviewed disposable boundary; [evidence](B1-phase-b-runtime-evidence-20261027.md).
 - `BLOCKED`: missing toolchain/credentials or reproducible incompatibility; capture the failing command and exit code, without improvising infra.
-- `CLOUD_STAGE_PASSED`: **not eligible** under this B1-D planning gate.
+- `CLOUD_STAGE_PASSED`: **PASS (2026-10-29)** — isolated non-production stage `b1-product-read`: deploy, private seed via a revoked one-time credential, external `GET /products` 200 with database-backed JSON, full teardown verified ([evidence](B1-ac06-stage-evidence-20261029.md)).
 
 ## Decisions — closed 2026-10-27 (reviewer sign-off recorded in [the exit review](B1-d-exit-review-20261027.md))
 
