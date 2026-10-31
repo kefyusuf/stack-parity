@@ -1,12 +1,12 @@
 import node from "@prisma/composer/node";
 import { compute } from "@prisma/composer-prisma-cloud";
 import { postgres } from "@prisma/composer-prisma-cloud/orm";
-import { productContract } from "./contract.ts";
+import { appContract } from "./contract.ts";
 
 export default compute({
   name: "publicApi",
   deps: {
-    db: postgres(productContract),
+    db: postgres(appContract),
   },
   build: node({
     module: import.meta.url,

@@ -1,17 +1,18 @@
 import { module } from "@prisma/composer";
 import { postgres } from "@prisma/composer-prisma-cloud/orm";
-import { productContract } from "./services/public-api/src/contract.ts";
+import { appContract } from "./services/public-api/src/contract.ts";
 import publicApi from "./services/public-api/src/service.ts";
 
-// B1: publicApi now depends on a Product-read Postgres resource.
-// Deploying this graph to any stage (including spike-001) creates that
-// database on the stage and therefore requires the separate B1-AC-06 cloud
-// approval; do not run `pnpm compute:deploy` without it.
+// B1/B2: publicApi depends on a Postgres resource whose data contract now
+// carries the Product and Customer tables. Deploying this graph to any
+// stage (including spike-001) creates that database on the stage and
+// therefore requires the separate cloud approval recorded per milestone
+// (B1-AC-06 pattern); do not run `pnpm compute:deploy` without one.
 export default module("stack-parity", ({ provision }) => {
   const db = provision(
     postgres({
       name: "database",
-      contract: productContract,
+      contract: appContract,
       config: "./services/public-api/prisma.config.ts",
     }),
     { id: "database" },
