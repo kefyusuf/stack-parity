@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Deterministic, idempotent Product seed (B1; D-B1-03 approved mechanism).
+// Deterministic, idempotent seed for the Product and Customer tables
+// (B1 + B2; D-B1-03 approved mechanism, extended by D-B2-02).
 //
 // Usage: DATABASE_URL=<connection string> node scripts/seed.mjs
 // (or: pnpm --filter @stack-parity/public-api seed)
@@ -9,8 +10,10 @@
 // re-run: existing rows are updated to the deterministic fixture values.
 import { Client } from "pg";
 
-const FIXTURE_ROWS = [
-  { id: "p-001", name: "Sample Product" },
+const PRODUCTS = [{ id: "p-001", name: "Sample Product" }];
+
+const CUSTOMERS = [
+  { id: "c-001", email: "customer-001@stack-parity.test", name: "Sample Customer" },
 ];
 
 function redact(message) {
@@ -26,15 +29,26 @@ if (!connectionString) {
 const client = new Client({ connectionString });
 try {
   await client.connect();
-  for (const row of FIXTURE_ROWS) {
+  for (const row of PRODUCTS) {
     await client.query(
       'INSERT INTO "public"."Product" (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name',
       [row.id, row.name],
     );
   }
-  const result = await client.query('SELECT id, name FROM "public"."Product" ORDER BY id');
-  console.log(`seed: ${FIXTURE_ROWS.length} fixture row(s) ensured; table now holds ${result.rowCount} row(s)`);
-  for (const row of result.rows) {
+  for (const row of CUSTOMERS) {
+    await client.query(
+      'INSERT INTO "public"."Customer" (id, email, name) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name',
+      [row.id, row.email, row.name],
+    );
+  }
+  const products = await client.query('SELECT id, name FROM "public"."Product" ORDER BY id');
+  console.log(`seed: ${PRODUCTS.length} product fixture row(s) ensured; table now holds ${products.rowCount} row(s)`);
+  for (const row of products.rows) {
+    console.log(`seed: ${row.id} ${row.name}`);
+  }
+  const customers = await client.query('SELECT id, name FROM "public"."Customer" ORDER BY id');
+  console.log(`seed: ${CUSTOMERS.length} customer fixture row(s) ensured; table now holds ${customers.rowCount} row(s)`);
+  for (const row of customers.rows) {
     console.log(`seed: ${row.id} ${row.name}`);
   }
 } catch (error) {
