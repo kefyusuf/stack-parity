@@ -1,5 +1,9 @@
 import type { ProductReadItem } from "@stack-parity/contracts";
 import { createApp } from "./app.ts";
+import {
+  unconfiguredItemReader,
+  unconfiguredListReader,
+} from "./product-reader.ts";
 import type { ProductReader } from "./product-reader.ts";
 import service from "./service.ts";
 
@@ -27,8 +31,15 @@ const readProducts: ProductReader = async () => {
   return items;
 };
 
+// B2 unit 2 binds the product-detail and customer readers against the
+// typed client (detail filter + Customer table); until then they fail
+// closed exactly like the standalone runner.
 Bun.serve({
   port,
   hostname: "0.0.0.0",
-  fetch: createApp(readProducts).fetch,
+  fetch: createApp({
+    readProducts,
+    readProductById: unconfiguredItemReader("product detail reader not bound yet"),
+    readCustomers: unconfiguredListReader("customer reader not bound yet"),
+  }).fetch,
 });
