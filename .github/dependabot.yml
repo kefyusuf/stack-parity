@@ -1,0 +1,19 @@
+# Root-only by design: this is a pnpm workspace, and Dependabot cannot
+# update manifests from inside a workspace subdirectory (the updater fails
+# with "Updating workspaces from inside a workspace subdirectory is not
+# supported"). Every manifest, including services/public-api/package.json,
+# is resolved through the root pnpm-lock.yaml.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"

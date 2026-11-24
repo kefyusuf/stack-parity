@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "check": "turbo run //#typecheck //#test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "pnpm --filter @stack-parity/public-api test",
     "compute:dev": "prisma dev module.ts",
