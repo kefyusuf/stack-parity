@@ -8,6 +8,25 @@
       "outputs": [
         "dist/**"
       ]
+    },
+    "//#typecheck": {
+      "inputs": [
+        "module.ts",
+        "prisma.config.ts",
+        "tsconfig.json",
+        "package.json",
+        "packages/**",
+        "services/**"
+      ],
+      "outputs": []
+    },
+    "//#test": {
+      "inputs": [
+        "package.json",
+        "packages/**",
+        "services/**"
+      ],
+      "outputs": []
     }
   }
 }

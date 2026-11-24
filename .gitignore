@@ -10,3 +10,8 @@ dist/
 .prisma-composer/
 .alchemy/
 .DS_Store
+
+# Local agent tooling (search re-admission lives in the local .ignore file)
+.ignore
+.mimosa/
+graft/
