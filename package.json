@@ -16,17 +16,17 @@
     "compute:deploy": "prisma deploy module.ts --stage spike-001"
   },
   "dependencies": {
-    "@prisma/composer": "0.29.1",
-    "@prisma/composer-prisma-cloud": "0.29.1",
+    "@prisma/composer": "0.39.0",
+    "@prisma/composer-prisma-cloud": "0.39.0",
     "@prisma/orm-postgres": "8.0.0-rc.17",
-    "pg": "8.22.0"
+    "pg": "8.23.1"
   },
   "devDependencies": {
-    "@effect/platform-bun": "4.0.0-rc.115",
-    "@effect/platform-node": "4.0.0-rc.115",
-    "@types/bun": "1.4.2",
+    "@effect/platform-bun": "4.1.5",
+    "@effect/platform-node": "4.1.5",
+    "@types/bun": "1.4.5",
     "prisma": "8.0.0-rc.22",
-    "turbo": "2.11.2",
+    "turbo": "2.11.13",
     "typescript": "7.0.2"
   }
 }
