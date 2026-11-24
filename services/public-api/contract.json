@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Customer": {
+      "model": "Customer",
+      "namespace": "public"
+    },
     "Product": {
       "model": "Product",
       "namespace": "public"
@@ -13,6 +17,47 @@
     "namespaces": {
       "public": {
         "models": {
+          "Customer": {
+            "fields": {
+              "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "email": {
+                  "column": "email"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Customer"
+            }
+          },
           "Product": {
             "fields": {
               "id": {
@@ -53,6 +98,33 @@
       "public": {
         "entries": {
           "table": {
+            "Customer": {
+              "columns": {
+                "email": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Product": {
               "columns": {
                 "id": {
@@ -81,7 +153,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c5e8c20a65e7a2d6bc8dc1405e289b7377520cb22097b5dbc3480c1f337ee7dd"
+    "storageHash": "1df0823409b236d683b32ee7484562d0d51ae9986d12fe55b7d5cefa1c8c2dd3"
   },
   "capabilities": {
     "postgres": {

@@ -1,13 +1,22 @@
 // use prisma-8
 //
-// The B1 Product data contract, authored in PSL — the approved D-B1-02
-// scope: opaque string id, name. `prisma contract emit` produces
-// contract.json (data the runtime reads) and contract.d.ts (the branded
-// types the service's typed client flows from). Migrations live in
-// ./migrations and are applied by the local dev bootstrap and by deploys.
+// The B1/B2 data contract, authored in PSL — the approved D-B1-02 and
+// D-B2-01/02 scopes: Product (opaque id, name) and Customer (opaque id,
+// email, name). `prisma contract emit` produces contract.json (data the
+// runtime reads) and contract.d.ts (the branded types the service's typed
+// client flows from). Migrations live in ./migrations and are applied by
+// the local dev bootstrap and by deploys.
 model Product {
   id String @id
   name String
 
   @@map("Product")
+}
+
+model Customer {
+  id String @id
+  email String
+  name String
+
+  @@map("Customer")
 }

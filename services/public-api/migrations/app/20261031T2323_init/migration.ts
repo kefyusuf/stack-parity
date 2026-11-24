@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node
-import type { Contract as End } from '../../snapshots/c5e8c20a65e7a2d6bc8dc1405e289b7377520cb22097b5dbc3480c1f337ee7dd/contract';
-import endContract from '../../snapshots/c5e8c20a65e7a2d6bc8dc1405e289b7377520cb22097b5dbc3480c1f337ee7dd/contract.json' with { type: 'json' };
+import type { Contract as End } from '../../snapshots/1df0823409b236d683b32ee7484562d0d51ae9986d12fe55b7d5cefa1c8c2dd3/contract';
+import endContract from '../../snapshots/1df0823409b236d683b32ee7484562d0d51ae9986d12fe55b7d5cefa1c8c2dd3/contract.json' with { type: 'json' };
 import { Migration, MigrationCLI, col, primaryKey } from '@prisma/orm-postgres/migration';
 
 export default class M extends Migration<never, End> {
@@ -14,6 +14,16 @@ export default class M extends Migration<never, End> {
         table: 'Product',
         columns: [
           col('id', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('name', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+        ],
+        constraints: [primaryKey(['id'])],
+      }),
+      this.createTable({
+        schema: 'public',
+        table: 'Customer',
+        columns: [
+          col('id', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('email', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
           col('name', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
         ],
         constraints: [primaryKey(['id'])],
